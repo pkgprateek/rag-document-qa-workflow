@@ -40,3 +40,4 @@ sqlalchemy>=2.0
 tqdm>=4.0
 transformers>=4.0
 urllib3>=2.0
+sentence-transformers>=5.0
