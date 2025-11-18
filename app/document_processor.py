@@ -15,19 +15,18 @@ class DocumentProcessor:
 
     def process_pdf(self, file_path: str) -> List[Document]:
         """Extract text from a PDF file and split it into chunks"""
-        with open(file_path, "rb") as file:
-            reader = PyPDF2.PdfReader(file)
-            text = ""
-            for page_num, page in enumerate(reader.pages):
-                page_text = page.extract_text()
-                if page_text:
-                    text += f"\n---- Page {page_num + 1} ----\n{page_text}"
-            # Create documents with metadata
-            chunks = self.text_splitter.create_documents(
-                [text],
-                metadatas=[{"source": file_path, "type": "pdf"}],
-            )
-            return chunks
+        reader = PyPDF2.PdfReader(file_path)
+        text = ""
+        for page_num, page in enumerate(reader.pages):
+            page_text = page.extract_text()
+            if page_text:
+                text += f"\n---- Page {page_num + 1} ----\n{page_text}"
+        # Create documents with metadata
+        chunks = self.text_splitter.create_documents(
+            [text],
+            metadatas=[{"source": file_path, "type": "pdf"}],
+        )
+        return chunks
 
     def process_docx(self, file_path: str) -> List[Document]:
         """Extract text from a DOCX file and split it into chunks"""

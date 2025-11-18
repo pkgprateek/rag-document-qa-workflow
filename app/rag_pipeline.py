@@ -1,9 +1,10 @@
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.llms import Ollama
-from langchain_community.chains import RetrievalQA
+from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from typing import List
 
 class RAGPipeline:
@@ -18,7 +19,7 @@ class RAGPipeline:
             embedding_function=self.embeddings,
         )
         #Initialize LLM 
-        self.llm = Ollama(model="gemma3:latest")
+        self.llm = OllamaLLM(model="gemma3:latest")
 
         # Create RAG chain
         self.rag_chain = self.create_rag_chain()
@@ -42,14 +43,16 @@ class RAGPipeline:
             """
         )
 
-        self.rag_chain = RetrievalQA.from_chain_type(
-            llm=self.llm,
-            chain_type="stuff",
-            retriever=self.vector_store.as_retriever(search_kwargs={"k": 4}),
-            chain_type_kwargs={"prompt": prompt},
-            return_source_documents=True  # Fixed parameter name
+        def format_docs(docs):
+            return "\n\n".join(doc.page_content for doc in docs)
+
+        self.rag_chain = (
+            {"context": self.vector_store.as_retriever(search_kwargs={"k": 4}) | format_docs, "question": RunnablePassthrough()}
+            | prompt
+            | self.llm
+            | StrOutputParser()
         )
-        return self.rag_chain  # Added return statement
+        return self.rag_chain
     
 
     def add_documents(self, documents: List[Document]) -> None:
@@ -61,8 +64,14 @@ class RAGPipeline:
     
     def query(self, question: str) -> dict:
         """Query the RAG pipeline with a question"""
-        result = self.rag_chain({"query": question})
+        # Get relevant documents
+        retriever = self.vector_store.as_retriever(search_kwargs={"k": 4})
+        source_docs = retriever.invoke(question)
+        
+        # Get answer from chain
+        answer = self.rag_chain.invoke(question)
+        
         return {
-            "answer": result["result"],
-            "sources": result["source_documents"]
+            "answer": answer,
+            "sources": source_docs
         }
