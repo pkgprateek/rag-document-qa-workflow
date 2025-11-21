@@ -66,7 +66,7 @@ Upload documents (PDF, DOCX, TXT) and ask questions - get citation-backed answer
 ## Quick Start
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.10+
 - OpenRouter API key ([Get free tier](https://openrouter.ai/keys))
 
 ### Installation
