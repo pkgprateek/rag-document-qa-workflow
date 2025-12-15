@@ -6,31 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Vertical configurations
-VERTICALS = {
-    "Legal": [
-        "data/samples/legal/service_agreement.txt",
-        "data/samples/legal/amendment.txt",
-        "data/samples/legal/nda.txt",
-    ],
-    "Research": [
-        "data/samples/research/llm_enterprise_survey.txt",
-        "data/samples/research/rag_methodology.txt",
-        "data/samples/research/vector_db_benchmark.txt",
-    ],
-    "FinOps": [
-        "data/samples/finops/cloud_cost_optimization.txt",
-        "data/samples/finops/aws_invoice_sept2024.txt",
-        "data/samples/finops/kubernetes_cost_allocation.txt",
-    ],
-}
-
-QUERIES = {
-    "Legal": ["What are the termination conditions?", "Summarize payment terms"],
-    "Research": ["What methodology was used?", "Summarize key findings"],
-    "FinOps": ["Top 3 cost optimizations?", "Extract spend by category"],
-}
-
 
 class DocumentRagApp:
     def __init__(self):
@@ -39,15 +14,33 @@ class DocumentRagApp:
         self.loaded_documents = []
 
     def load_samples(self, vertical):
+        samples = {
+            "Legal": [
+                "data/samples/legal/service_agreement.txt",
+                "data/samples/legal/amendment.txt",
+                "data/samples/legal/nda.txt",
+            ],
+            "Research": [
+                "data/samples/research/llm_enterprise_survey.txt",
+                "data/samples/research/rag_methodology.txt",
+                "data/samples/research/vector_db_benchmark.txt",
+            ],
+            "FinOps": [
+                "data/samples/finops/cloud_cost_optimization.txt",
+                "data/samples/finops/aws_invoice_sept2024.txt",
+                "data/samples/finops/kubernetes_cost_allocation.txt",
+            ],
+        }
+
         try:
-            for path in VERTICALS[vertical]:
+            for path in samples[vertical]:
                 if os.path.exists(path):
                     chunks = self.processor.process_txt(path)
                     self.rag_pipeline.add_documents(chunks, is_sample=True)
                     self.loaded_documents.append(os.path.basename(path))
-            return f"✅ Loaded {len(VERTICALS[vertical])} {vertical} documents"
+            return f"✓ Loaded {len(samples[vertical])} {vertical} documents"
         except Exception as e:
-            return f"❌ Error: {str(e)}"
+            return f"Error: {str(e)}"
 
     def process_file(self, file):
         if not file:
@@ -64,9 +57,9 @@ class DocumentRagApp:
                 return "Unsupported format"
 
             self.rag_pipeline.add_documents(chunks, is_sample=False)
-            return f"✅ Processed {len(chunks)} chunks"
+            return f"✓ Processed {len(chunks)} chunks"
         except Exception as e:
-            return f"❌ {str(e)}"
+            return f"Error: {str(e)}"
 
     def ask(self, question):
         if not self.loaded_documents:
@@ -82,165 +75,259 @@ class DocumentRagApp:
 
 app = DocumentRagApp()
 
-# Ultra-minimal CSS
+# ChatGPT-inspired dark theme
 css = """
+:root {
+    --bg-dark: #343541;
+    --bg-darker: #202123;
+    --bg-input: #40414F;
+    --text: #ECECF1;
+    --text-dim: #A0A0AA;
+    --border: #565869;
+    --accent: #19C37D;
+}
+
 .gradio-container {
-    max-width: 1200px !important;
-    margin: 0 auto !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    background: var(--bg-dark) !important;
+    font-family: -apple-system, system-ui, sans-serif !important;
+    max-width: 100% !important;
+    padding: 0 !important;
 }
 
-#hero {
+#main-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+/* Header */
+#header {
     text-align: center;
-    padding: 2.5rem 1rem 2rem;
-    background: linear-gradient(to right, #EFF6FF, #F0FDF4);
-    border-radius: 12px;
     margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
 }
 
-#hero h1 {
-    font-size: 2.25rem;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 0.5rem;
+#header h1 {
+    color: var(--text);
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
 }
 
-#hero p {
-    font-size: 1.1rem;
-    color: #6B7280;
+#header p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin: 0;
 }
 
-.tab-nav button {
-    font-size: 1.05rem !important;
-    font-weight: 600 !important;
+/* Controls section */
+.controls {
+    background: var(--bg-input);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+}
+
+.controls-title {
+    color: var(--text);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Dropdown and buttons */
+select, button, textarea, input {
+    background: var(--bg-darker) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+}
+
+select:focus, textarea:focus, input:focus {
+    border-color: var(--accent) !important;
+    outline: none !important;
 }
 
 button {
-    border-radius: 8px !important;
+    padding: 0.625rem 1.25rem !important;
+    font-weight: 500 !important;
+    transition: all 0.15s !important;
 }
 
-.primary-action {
-    background: linear-gradient(to right, #2563EB, #059669) !important;
-    color: white !important;
+button:hover {
+    background: var(--bg-input) !important;
+    border-color: var(--accent) !important;
+}
+
+.primary-btn {
+    background: var(--accent) !important;
+    color: #000 !important;
     font-weight: 600 !important;
-    padding: 0.75rem 1.5rem !important;
-    border: none !important;
 }
 
+.primary-btn:hover {
+    background: #1AB370 !important;
+}
+
+/* Query buttons */
 .query-btn {
-    background: white !important;
-    border: 2px solid #E5E7EB !important;
-    color: #374151 !important;
+    width: 100% !important;
     text-align: left !important;
-    padding: 0.65rem 1rem !important;
-    font-size: 0.95rem !important;
+    margin-bottom: 0.5rem !important;
 }
 
-.query-btn:hover {
-    border-color: #2563EB !important;
-    background: #F9FAFB !important;
+/* Question input */
+#question-box {
+    background: var(--bg-input);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
 }
 
-#answer-area {
-    background: white;
-    border: 2px solid #E5E7EB;
-    border-radius: 10px;
+textarea {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    padding: 0.75rem !important;
+}
+
+/* Answer area */
+#answer-section {
+    background: var(--bg-input);
+    border-radius: 8px;
     padding: 1.5rem;
-    min-height: 350px;
-    line-height: 1.7;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+    min-height: 300px;
 }
 
-#info-box {
-    background: #FFFBEB;
-    border-left: 4px solid #F59E0B;
-    padding: 1rem;
+#answer-section .markdown {
+    color: var(--text) !important;
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+/* Footer info */
+#footer-info {
+    max-width: 800px;
+    margin: 2rem auto 0;
+    padding: 2rem 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.info-box {
+    background: var(--bg-input);
     border-radius: 6px;
-    margin-top: 1rem;
-    font-size: 0.9rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    font-size: 0.875rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+}
+
+.calendly-box {
+    background: linear-gradient(135deg, #1A7F64, var(--accent));
+    color: #000;
+    border-radius: 6px;
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.calendly-box a {
+    color: #000;
+    text-decoration: underline;
 }
 """
 
-with gr.Blocks(css=css, theme=gr.themes.Soft(), title="Enterprise RAG Demo") as demo:
-    # Hero
-    gr.HTML("""
-        <div id="hero">
-            <h1>Enterprise RAG + Agentic Automation</h1>
-            <p>Document intelligence for Legal, Research, and FinOps teams</p>
-        </div>
-    """)
+with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
+    with gr.Column(elem_id="main-container"):
+        # Header
+        gr.HTML("""
+            <div id="header">
+                <h1>Enterprise RAG Platform</h1>
+                <p>Document intelligence for Legal, Research, and FinOps</p>
+            </div>
+        """)
 
-    # Tabs
-    with gr.Tabs():
-        for vertical in ["Legal", "Research", "FinOps"]:
-            icon = {"Legal": "⚖️", "Research": "🔬", "FinOps": "💰"}[vertical]
-            with gr.Tab(f"{icon} {vertical}"):
-                gr.Button(
-                    f"Load {vertical} Samples", elem_classes="primary-action", size="lg"
-                ).click(
-                    fn=lambda v=vertical: app.load_samples(v), outputs=gr.Markdown("")
-                )
-
-    gr.Markdown("---")
-
-    # Main area
-    with gr.Row():
-        with gr.Column(scale=2):
-            gr.Markdown("### 💬 Quick Queries")
-
-            # 6 query buttons (2 rows of 3)
+        # Load samples
+        with gr.Group(elem_classes="controls"):
+            gr.HTML('<div class="controls-title">Load Sample Documents</div>')
             with gr.Row():
-                q1 = gr.Button(
-                    "What are the termination conditions?", elem_classes="query-btn"
+                sample_dropdown = gr.Dropdown(
+                    choices=["Legal", "Research", "FinOps"],
+                    value="Legal",
+                    show_label=False,
+                    scale=3,
                 )
-                q2 = gr.Button("Summarize payment terms", elem_classes="query-btn")
-                q3 = gr.Button("What methodology was used?", elem_classes="query-btn")
-            with gr.Row():
-                q4 = gr.Button("Summarize key findings", elem_classes="query-btn")
-                q5 = gr.Button("Top 3 cost optimizations?", elem_classes="query-btn")
-                q6 = gr.Button("Extract spend by category", elem_classes="query-btn")
+                load_btn = gr.Button("Load", elem_classes="primary-btn", scale=1)
+            load_status = gr.Markdown("")
 
-            gr.Markdown("### ✍️ Custom Question")
+        # Upload
+        with gr.Group(elem_classes="controls"):
+            gr.HTML('<div class="controls-title">Or Upload Your Documents</div>')
+            file_upload = gr.File(
+                file_types=[".pdf", ".docx", ".txt"], show_label=False
+            )
+            process_btn = gr.Button("Process", elem_classes="primary-btn")
+            upload_status = gr.Markdown("")
+
+        # Quick queries
+        with gr.Group(elem_classes="controls"):
+            gr.HTML('<div class="controls-title">Quick Queries</div>')
+            q1 = gr.Button(
+                "What are the termination conditions?", elem_classes="query-btn"
+            )
+            q2 = gr.Button("Summarize payment terms", elem_classes="query-btn")
+            q3 = gr.Button("What methodology was used?", elem_classes="query-btn")
+            q4 = gr.Button("Summarize key findings", elem_classes="query-btn")
+            q5 = gr.Button("Top 3 cost optimizations?", elem_classes="query-btn")
+            q6 = gr.Button("Extract spend by category", elem_classes="query-btn")
+
+        # Question
+        with gr.Group(elem_id="question-box"):
+            gr.HTML('<div class="controls-title">Ask Your Question</div>')
             question = gr.Textbox(
-                placeholder="Ask anything about loaded documents...",
-                show_label=False,
-                lines=2,
+                placeholder="Type your question here...", show_label=False, lines=2
             )
-            gr.Button("Ask", elem_classes="primary-action").click(
-                fn=app.ask,
-                inputs=question,
-                outputs=gr.Markdown("", elem_id="answer-area"),
-            )
+            ask_btn = gr.Button("Ask", elem_classes="primary-btn")
 
-            gr.Markdown("### 📜 Answer", elem_id="answer-header")
-            answer = gr.Markdown(
-                "*Load documents above to start*", elem_id="answer-area"
-            )
+        # Answer
+        with gr.Group(elem_id="answer-section"):
+            gr.HTML('<div class="controls-title">Answer</div>')
+            answer = gr.Markdown("*Load documents to get started*")
 
-        with gr.Column(scale=1):
-            gr.Markdown("### 📂 Upload")
-            file = gr.File(file_types=[".pdf", ".docx", ".txt"])
-            gr.Button("Process", elem_classes="primary-action").click(
-                fn=app.process_file, inputs=file, outputs=gr.Markdown("")
-            )
+    # Footer
+    with gr.Column(elem_id="footer-info"):
+        gr.HTML("""
+            <div class="calendly-box">
+                📅 2-Week Paid Pilots Available · 
+                <a href="#" target="_blank">Book Discovery Call</a>
+            </div>
+        """)
+        gr.HTML("""
+            <div class="info-box">
+                🔒 Privacy: Documents processed locally, auto-deleted after 7 days, never used for training
+            </div>
+        """)
 
-            gr.HTML("""
-                <div style="background: linear-gradient(135deg, #2563EB, #059669); color: white; padding: 1.25rem; border-radius: 10px; text-align: center; margin-top: 1.5rem;">
-                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📅</div>
-                    <div style="font-weight: 700; margin-bottom: 0.5rem;">Paid Pilots Open</div>
-                    <a href="#" style="color: white; text-decoration: underline;">Book 15-min Call →</a>
-                </div>
-            """)
+    # Event handlers
+    load_btn.click(fn=app.load_samples, inputs=sample_dropdown, outputs=load_status)
+    process_btn.click(fn=app.process_file, inputs=file_upload, outputs=upload_status)
 
-            gr.HTML("""
-                <div id="info-box">
-                    <strong>🔒 Privacy:</strong> Documents processed into text chunks, auto-deleted after 7 days. No data used for training.
-                </div>
-            """)
+    q1.click(fn=lambda: app.ask("What are the termination conditions?"), outputs=answer)
+    q2.click(fn=lambda: app.ask("Summarize payment terms"), outputs=answer)
+    q3.click(fn=lambda: app.ask("What methodology was used?"), outputs=answer)
+    q4.click(fn=lambda: app.ask("Summarize key findings"), outputs=answer)
+    q5.click(fn=lambda: app.ask("Top 3 cost optimizations?"), outputs=answer)
+    q6.click(fn=lambda: app.ask("Extract spend by category"), outputs=answer)
 
-    # Wire up queries
-    for i, btn in enumerate([q1, q2, q3, q4, q5, q6]):
-        queries_list = QUERIES["Legal"] + QUERIES["Research"] + QUERIES["FinOps"]
-        btn.click(fn=lambda q=queries_list[i]: app.ask(q), outputs=answer)
+    ask_btn.click(fn=app.ask, inputs=question, outputs=answer)
 
 if __name__ == "__main__":
     demo.launch(share=False)
