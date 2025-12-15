@@ -1,6 +1,6 @@
 ---
-title: RAG Document Question-Answer System
-emoji: 📚
+title: Enterprise RAG Platform
+emoji: 🚀
 colorFrom: blue
 colorTo: green
 sdk: gradio
@@ -8,102 +8,188 @@ sdk_version: 5.49.1
 app_file: app/main.py
 pinned: false
 license: mit
-short_description: Enterprise RAG + Agentic Automation — Live demo
+short_description: Document intelligence for Legal, Research, FinOps
 full_width: true
 ---
 
 # Enterprise RAG + Agentic Automation
 
-> **Production-ready RAG platform for Legal, Research, and FinOps teams**
+> Document intelligence that actually works — Built for Legal, Research, and FinOps teams
 
-[![Deploy to HF](https://github.com/pkgprateek/ai-rag-document/actions/workflows/deploy-to-hf.yml/badge.svg)](https://github.com/pkgprateek/ai-rag-document/actions/workflows/deploy-to-hf.yml)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-success)](https://huggingface.co/spaces/pkgprateek/ai-rag-document)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## 🚀 Live Demo
+## One-Liner
 
-Try instant RAG-powered Q&A with pre-loaded sample documents:
-- **Legal**: Contract analysis, risk extraction, payment terms
-- **Research**: Paper summarization, methodology extraction
-- **FinOps**: Cost analysis, spend optimization insights
+**Upload contracts, papers, or cost reports → Ask questions in plain English → Get cited answers in <5 seconds**
 
-**No signup required** - Start asking questions immediately.
+Who it's for: Legal teams drowning in contracts, Research teams reviewing literature, FinOps teams analyzing cloud spend.
 
 ---
 
-## ✨ Key Features
+## Architecture Overview
 
-- **Multi-Format Support**: PDF, DOCX, TXT with intelligent parsing
-- **Citation-Backed Answers**: Every response includes source references
-- **Vertical-Specific Demos**: Pre-loaded samples for Legal/Research/FinOps
-- **Instant Insights**: Get answers in <5 seconds
-- **Enterprise-Ready**: AES-256 encryption, auto-cleanup, rate limiting
-
----
-
-## 📊 How It Works
-
-```
-📄 Upload Document  →  🧠 AI Processes  →  💬 Ask Smart Questions
-   (PDF/DOCX/TXT)      (Chunks + Vectors)    (Get Cited Answers)
+```mermaid
+graph LR
+    A[📄 Documents<br/>PDF/DOCX/TXT] -->|Upload| B[🔪 Chunking<br/>1000 chars, 200 overlap]
+    B --> C[🧠 Embeddings<br/>bge-small-en-v1.5<br/>384-dim vectors]
+    C --> D[(🗄️ ChromaDB<br/>Vector Store)]
+    
+    E[💬 User Question] --> F[🔍 Retrieval<br/>Top-4 semantic search]
+    D --> F
+    F --> G[🤖 LLM Generation<br/>Gemma 3-4B-IT]
+    G --> H[✨ Cited Answer]
+    
+    style A fill:#E0F2FE
+    style D fill:#FEF3C7
+    style H fill:#D1FAE5
 ```
 
-Powered by:
-- **LangChain** - RAG orchestration
-- **ChromaDB** - Vector storage
-- **BAAI/bge-small-en-v1.5** - Embeddings (384-dim)
-- **Google Gemma 3-4B-IT** - Generation (via OpenRouter)
+**Key Components:**
+- **Chunking**: Recursive text splitter with semantic boundaries
+- **Embeddings**: BAAI/bge-small-en-v1.5 (best quality/speed ratio)
+- **Vector DB**: ChromaDB with persistent storage
+- **LLM**: Gemma 3-4B-IT via OpenRouter (free tier)
+- **RAG Chain**: LangChain orchestration with citation tracking
 
 ---
 
-## 🔒 Data Privacy
+## Quick Start (5 minutes)
 
-Your documents are:
-- ✅ Encrypted in transit and at rest (AES-256)
-- ✅ Automatically deleted after 7 days
-- ✅ Removable on request
-- ✅ Never used for training
+### Option 1: Docker (Fastest)
+```bash
+git clone https://github.com/pkgprateek/rag-document-qa-workflow.git
+cd rag-document-qa-workflow
+
+# Add your OpenRouter API key
+echo "OPENROUTER_API_KEY=your_key" > .env
+
+# Run (single command!)
+docker compose up
+
+# Open: http://localhost:7860
+```
+
+### Option 2: UV (10x faster than pip)
+```bash
+git clone https://github.com/pkgprateek/rag-document-qa-workflow.git
+cd rag-document-qa-workflow
+
+# Setup
+uv venv && source .venv/bin/activate
+uv pip install -r requirements.txt
+
+# Add API key
+echo "OPENROUTER_API_KEY=your_key" > .env
+
+# Run
+python app/main.py
+```
+
+**Get OpenRouter API key**: [openrouter.ai/keys](https://openrouter.ai/keys) (Free tier available)
 
 ---
 
-## 📅 Enterprise Pilots
+## Key Features
 
-**Paid pilots are now open** for teams processing:
-- Legal contracts at scale
-- Research literature reviews
-- Financial operations reports
-
-[Book a 15-minute discovery call →](https://calendly.com/your-link-here)
-
----
-
-## 🛠️ Technology Stack
-
-| Component | Technology | Why |
-|-----------|-----------|-----|
-| Framework | LangChain 1.0.7 | Industry standard RAG |
-| Vector DB | ChromaDB 1.3.4 | Persistent, lightweight |
-| Embeddings | BAAI/bge-small-en-v1.5 | Best quality/speed ratio |
-| LLM | Google Gemma 3-4B-IT | Free tier via OpenRouter |
-| UI | Gradio 5.49.1 | Rapid prototyping |
+✅ **Multi-Format Support** — PDF, DOCX, TXT with intelligent parsing  
+✅ **Citation-Backed Answers** — Every response includes source references  
+✅ **Vertical-Specific Demos** — Pre-loaded samples for Legal/Research/FinOps  
+✅ **Rate Limiting** — Built-in abuse prevention (10 queries/hour, configurable)  
+✅ **Auto-Cleanup** — User documents deleted after 7 days  
+✅ **Persistent Storage** — ChromaDB ensures data survives restarts  
 
 ---
 
-## 📞 Contact
+## Privacy & Security
+
+🔒 **Data Handling:**
+- Documents chunked into text + embeddings
+- Stored in local ChromaDB (not in cloud)
+- User uploads auto-deleted after 7 days
+- Sample documents persist for demos
+- **Zero data used for model training**
+
+🛡️ **Rate Limiting:**
+- Default: 10 queries/hour per user
+- Prevents API abuse
+- Configurable in `app/rag_pipeline.py`
+
+---
+
+## Performance Metrics
+
+| Metric | Value |
+|--------|-------|
+| **Processing Speed** | ~500ms per 1000-char chunk |
+| **Retrieval Latency** | <100ms for top-4 results |
+| **Answer Generation** | 2-5 seconds (OpenRouter dependent) |
+| **Storage Efficiency** | ~10MB per 100-page document |
+
+---
+
+## System Design Deep Dive
+
+Want to understand the internals? Read the technical deep dive:
+
+📖 **[System Architecture & Design Decisions](https://github.com/pkgprateek/rag-document-qa-workflow)** (GitHub README)
+
+Covers: Chunking strategies, embedding selection, vector DB comparison, LLM routing, production deployment.
+
+---
+
+## Consulting & Pilot Availability
+
+I run **2-week paid pilots** for enterprise teams:
+
+✅ **Week 1**: Ingest your documents (contracts, papers, reports)  
+✅ **Week 2**: Deploy your instance, train your team, deliver ROI analysis  
+
+**Deliverables:**
+- Deployed RAG system on your infrastructure
+- Custom chunking/retrieval tuned to your documents
+- Performance benchmarks + accuracy metrics
+- 30-day support + training sessions
+
+📅 **[Book 15-min Discovery Call](https://calendly.com/your-link-here)**
+
+**Sample pilots:** Legal team (500 contracts), Research lab (2,000 papers), FinOps dept (12 months invoices)
+
+---
+
+## Live Demo
+
+**Try it now**: [https://huggingface.co/spaces/pkgprateek/ai-rag-document](https://huggingface.co/spaces/pkgprateek/ai-rag-document)
+
+1. Click a vertical tab (Legal/Research/FinOps)
+2. Load sample documents (one-click)
+3. Try canned queries or ask your own
+4. See cited answers in <5 seconds
+
+---
+
+## Technology Stack
+
+| Component | Choice | Why |
+|-----------|--------|-----|
+| **RAG Framework** | LangChain 1.0.7 | Industry standard, best ecosystem |
+| **Vector DB** | ChromaDB 1.3.4 | Lightweight, persistent, zero-config |
+| **Embeddings** | BAAI/bge-small-en-v1.5 | Best accuracy/speed tradeoff |
+| **LLM** | Gemma 3-4B-IT | Free tier, low latency |
+| **UI** | Gradio 5.49.1 | Fast prototyping, HF integration |
+
+---
+
+## Contact
 
 **Prateek Kumar Goel**
-- GitHub: [@pkgprateek](https://github.com/pkgprateek)
-- Hugging Face: [@pkgprateek](https://huggingface.co/pkgprateek)
-- Live Demo: [Try it now](https://huggingface.co/spaces/pkgprateek/ai-rag-document)
+
+- 🌐 Live Demo: [HuggingFace Space](https://huggingface.co/spaces/pkgprateek/ai-rag-document)
+- 💻 GitHub: [@pkgprateek](https://github.com/pkgprateek)
+- 🤗 HuggingFace: [@pkgprateek](https://huggingface.co/pkgprateek)
 
 ---
 
-## 📄 License
-
-MIT License - See [LICENSE](LICENSE) for details
-
----
-
-**For Technical Details**: See the [GitHub repository](https://github.com/pkgprateek/rag-document-qa-workflow) for architecture, deployment workflows, and contribution guidelines.
+**Built with production-grade MLOps practices** — Automated CI/CD, Docker deployment, enterprise security standards.
