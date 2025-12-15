@@ -1,5 +1,14 @@
 .DS_Store
 __pycache__
 .gradio
-data/
 .env
+
+# Vector database and runtime state
+data/chroma_db/
+data/rate_limit.json
+data/document_metadata.json
+
+# Keep samples directory in repo
+!data/samples/
+
+CLAUDE.md

@@ -1,0 +1,164 @@
+KUBERNETES COST ALLOCATION AND CHARGEBACK REPORT
+Environment: Production EKS Cluster (us-east-1)
+Reporting Period: September 2024
+
+EXECUTIVE SUMMARY
+
+Total cluster cost: $124,842
+Allocated to teams: $108,240 (86.7%)
+Unallocated (shared services): $16,602 (13.3%)
+
+Top 3 cost centers:
+1. Data Science Team: $42,880 (34.4%)
+2. Backend Engineering: $31,240 (25.0%)
+3. Frontend/Mobile: $18,420 (14.8%)
+
+Cost efficiency metrics:
+- CPU utilization: 42% (target: 65%)
+- Memory utilization: 38% (target: 60%)
+- Wasted resources: $34,280/month (27.5%)
+
+CLUSTER INFRASTRUCTURE COSTS
+
+Node Groups:
+- General Purpose (c5.2xlarge): $28,440 (18 nodes * 720 hours * $2.20/hour)
+- Memory Optimized (r5.2xlarge): $31,680 (20 nodes * 720 hours * $2.20/hour)
+- GPU (p3.2xlarge): $42,240 (14 nodes * 720 hours * $4.20/hour)
+
+Control Plane: $2,160 (3 master nodes)
+Load Balancers: $1,840 (8 ALBs)
+EBS Volumes: $8,420 (persistent storage)
+Data Transfer: $6,248 (inter-AZ, internet egress)
+Monitoring (Prometheus, Grafana): $3,814
+
+COST ALLOCATION BY NAMESPACE
+
+namespace: data-science
+  Total cost: $42,880
+  Pods: 847
+  CPU request: 2,840 cores
+  Memory request: 11.2 TB
+  GPU request: 48 GPUs
+  
+  Top workloads:
+  - ml-training-job-* : $24,240 (GPU-intensive)
+  - jupyter-notebooks-* : $8,640 (24/7 development environments)
+  - data-pipeline-etl : $6,420
+  
+  Optimization opportunities:
+  - 18 idle Jupyter notebooks ($4,320/month waste)
+  - Training jobs during business hours (use spot instances) → Save $12,120/month
+
+namespace: backend-api
+  Total cost: $31,240
+  Pods: 1,248
+  CPU request: 840 cores
+  Memory request: 3.4 TB
+  
+  Top workloads:
+  - user-service : $8,420
+  - payment-processor : $6,880
+  - notification-engine : $4,240
+  - order-management : $3,880
+  
+  Efficiency: 62% CPU utilization (good)
+  Recommendation: Increase resource limits slightly for headroom
+
+namespace: frontend
+  Total cost: $18,420
+  Pods: 624
+  CPU request: 420 cores
+  Memory request: 1.2 TB
+  
+  Over-provisioned: 28% CPU utilization
+  Recommendation: Reduce CPU requests by 40% → Save $7,368/month
+
+namespace: mobile-backend
+  Total cost: $15,700
+  
+  Workloads:
+  - ios-api-gateway : $6,240
+  - android-api-gateway : $5,880
+  - push-notification-service : $3,580
+
+CHARGEBACK BY TEAM
+
+Team: Data Science & ML
+  September cost: $42,880
+  Year-to-date: $384,240
+  Budget: $420,000/year
+  % of budget used: 91.5%
+  Forecast: Over budget by $50,160 if current trend continues
+
+Team: Backend Engineering
+  September cost: $31,240
+  Year-to-date: $274,800
+  Budget: $360,000/year
+  % of budget used: 76.3%
+  Status: On track
+
+Team: Frontend/Mobile
+  September cost: $34,120 (combined)
+  Year-to-date: $288,420
+  Budget: $300,000/year
+  % of budget used: 96.1%
+  Status: Nearly at budget
+
+Team: DevOps/Platform
+  September cost: $16,602 (shared infrastructure)
+  Allocated pro-rata to teams in monthly bills
+
+RESOURCE UTILIZATION ANALYSIS
+
+CPU Utilization by Team:
+- Data Science: 81% (efficient)
+- Backend: 62% (good)
+- Frontend: 28% (over-provisioned - needs rightsizing)
+- Mobile: 54% (acceptable)
+
+Memory Utilization by Team:
+- Data Science: 72% (good)
+- Backend: 48% (moderate waste)
+- Frontend: 22% (significant waste)
+- Mobile: 59% (acceptable)
+
+OPTIMIZATION RECOMMENDATIONS
+
+1. Vertical Pod Autoscaler (VPA)
+   Implement VPA for Frontend team → Estimated savings: $7,400/month
+   
+2. Spot Instances for ML Training
+   Move ML training to spot nodes (70% discount) → Save $16,968/month
+   
+3. Idle Resource Cleanup
+   Terminate 18 idle Jupyter notebooks → Save $4,320/month
+   
+4. Schedule Non-Production Workloads
+   Stop dev/staging environments nights/weekends → Save $5,840/month
+
+Total monthly savings potential: $34,528 (27.7% reduction)
+
+CHARGEBACK INVOICE DETAILS
+
+Team: Data Science
+  Compute: $38,240
+  Storage: $2,840
+  Network: $1,800
+  -------------------------
+  Total: $42,880
+  
+  Contact: Emily Watson (emily.watson@techcorp.com)
+  Cost center: CC-4201
+  
+Team: Backend Engineering
+  Compute: $28,440
+  Storage: $1,680
+  Network: $1,120
+  -------------------------
+  Total: $31,240
+  
+  Contact: Alex Kumar (alex.kumar@techcorp.com)
+  Cost center: CC-4202
+
+Billing contact for questions: finops@techcorp.com
+Dashboard: https://kubecost.techcorp.com (SSO login)

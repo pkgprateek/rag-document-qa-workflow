@@ -1,0 +1,144 @@
+MUTUAL NON-DISCLOSURE AGREEMENT
+
+This Mutual Non-Disclosure Agreement ("Agreement") is entered into as of March 1, 2024 ("Effective Date"), by and between:
+
+TechCorp Solutions Inc., a Delaware corporation ("TechCorp"), and
+Innovative AI Labs Inc., a California corporation ("AI Labs")
+
+(each a "Party" and collectively the "Parties").
+
+RECITALS
+
+The Parties wish to explore a potential business relationship related to the joint development of enterprise AI solutions ("Purpose"). In connection with this Purpose, each Party may disclose Confidential Information to the other.
+
+NOW, THEREFORE, in consideration of the mutual promises and covenants contained herein, the Parties agree as follows:
+
+1. DEFINITION OF CONFIDENTIAL INFORMATION
+
+1.1 "Confidential Information" means any information disclosed by one Party ("Disclosing Party") to the other Party ("Receiving Party"), whether orally, in writing, or in any other form, that:
+
+   (a) Is marked as "Confidential," "Proprietary," or with a similar designation;
+   (b) Is identified as confidential at the time of disclosure or within fifteen (15) days thereafter; or
+   (c) Should reasonably be understood to be confidential given its nature and the circumstances of disclosure.
+
+1.2 Confidential Information includes, but is not limited to:
+   - Technical data, algorithms, source code, software architecture
+   - Business plans, financial projections, pricing information
+   - Customer lists, user data, market research
+   - Product roadmaps, feature specifications
+   - Trade secrets, know-how, inventions
+   - Information about employees, consultants, or partners
+
+2. EXCLUSIONS FROM CONFIDENTIAL INFORMATION
+
+Confidential Information does not include information that:
+
+   (a) Was publicly available at the time of disclosure or becomes publicly available through no breach of this Agreement;
+   (b) Was rightfully in the Receiving Party's possession prior to disclosure by the Disclosing Party;
+   (c) Is independently developed by the Receiving Party without use of or reference to the Confidential Information;
+   (d) Is rightfully received by the Receiving Party from a third party without breach of any confidentiality obligation;
+   (e) Is approved for release by written authorization of the Disclosing Party.
+
+3. OBLIGATIONS OF RECEIVING PARTY
+
+3.1 Protection: The Receiving Party shall protect the Confidential Information using the same degree of care it uses to protect its own confidential information of similar nature, but in no event less than reasonable care.
+
+3.2 Limited Use: The Receiving Party shall use Confidential Information solely for the Purpose and not for any other purpose without prior written consent.
+
+3.3 Limited Disclosure: The Receiving Party may disclose Confidential Information only to its employees, contractors, and advisors who:
+   (a) Have a legitimate need to know for the Purpose;
+   (b) Are bound by confidentiality obligations at least as restrictive as those in this Agreement;
+   (c) Are informed of the confidential nature of the information.
+
+The Receiving Party remains liable for any breaches by its personnel.
+
+3.4 No Reverse Engineering: The Receiving Party shall not reverse engineer, disassemble, or decompile any prototypes, software, or other tangible objects embodying Confidential Information.
+
+4. COMPELLED DISCLOSURE
+
+If the Receiving Party is compelled by law, regulation, or court order to disclose Confidential Information:
+
+   (a) It shall provide prompt written notice to the Disclosing Party (if legally permissible);
+   (b) Cooperate with the Disclosing Party's efforts to seek protective orders;
+   (c) Disclose only the minimum information required;
+   (d) Use reasonable efforts to obtain confidential treatment for disclosed information.
+
+5. OWNERSHIP AND NO LICENSE
+
+5.1 All Confidential Information remains the property of the Disclosing Party. No license or rights are granted except as expressly stated in this Agreement.
+
+5.2 This Agreement does not require either Party to disclose any Confidential Information or enter into any further agreement.
+
+5.3 Nothing in this Agreement obligates either Party to proceed with any transaction or business relationship.
+
+6. RETURN OR DESTRUCTION OF INFORMATION
+
+Upon written request by the Disclosing Party or termination of discussions (whichever occurs first), the Receiving Party shall, at Disclosing Party's option:
+
+   (a) Return all Confidential Information and copies thereof; or
+   (b) Destroy all Confidential Information and certify destruction in writing.
+
+The Receiving Party may retain one copy in secure archives solely for legal compliance purposes, subject to ongoing confidentiality obligations.
+
+7. TERM AND TERMINATION
+
+7.1 Term: This Agreement commences on the Effective Date and continues for three (3) years.
+
+7.2 Survival: Confidentiality obligations survive termination for five (5) years from the date of disclosure for general Confidential Information, and indefinitely for information constituting trade secrets under applicable law.
+
+7.3 Either Party may terminate discussions at any time without liability, but confidentiality obligations continue per Section 7.2.
+
+8. NO WARRANTY
+
+CONFIDENTIAL INFORMATION IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+
+9. REMEDIES
+
+9.1 The Parties acknowledge that breach of this Agreement may cause irreparable harm for which monetary damages may be inadequate. Therefore, the Disclosing Party is entitled to seek injunctive relief without posting bond.
+
+9.2 Remedies are cumulative and include all remedies available at law or equity.
+
+10. GENERAL PROVISIONS
+
+10.1 Governing Law: This Agreement is governed by the laws of the State of California, without regard to conflict of laws principles.
+
+10.2 Jurisdiction: Any disputes shall be resolved exclusively in the state or federal courts located in Santa Clara County, California.
+
+10.3 Entire Agreement: This Agreement constitutes the entire understanding regarding confidentiality and supersedes all prior agreements.
+
+10.4 Amendments: Amendments must be in writing and signed by authorized representatives of both Parties.
+
+10.5 Severability: If any provision is held invalid, the remainder continues in effect.
+
+10.6 Waiver: Failure to enforce any provision does not constitute waiver of that or any other provision.
+
+10.7 Assignment: Neither Party may assign this Agreement without prior written consent, except to a successor through merger, acquisition, or sale of substantially all assets.
+
+10.8 Counterparts: This Agreement may be executed in counterparts, including electronic signatures, each deemed an original.
+
+10.9 Export Control: Each Party shall comply with all applicable export control laws and regulations.
+
+11. NOTICE
+
+All notices under this Agreement shall be in writing and delivered to:
+
+TechCorp Solutions Inc.
+Attn: Legal Department
+123 Innovation Drive
+San Francisco, CA 94105
+Email: legal@techcorp-solutions.com
+
+Innovative AI Labs Inc.
+Attn: General Counsel
+789 Research Parkway
+Palo Alto, CA 94301
+Email: legal@innovativeailabs.com
+
+IN WITNESS WHEREOF, the Parties have executed this Agreement as of the Effective Date.
+
+TECHCORP SOLUTIONS INC.                    INNOVATIVE AI LABS INC.
+
+By: _______________________                By: _______________________
+Name: Sarah Chen                           Name: Dr. Emily Watson
+Title: Chief Executive Officer             Title: Chief Technology Officer
+Date: March 1, 2024                        Date: March 1, 2024

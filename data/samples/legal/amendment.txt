@@ -1,0 +1,116 @@
+AMENDMENT NO. 1 TO MASTER SERVICES AGREEMENT
+
+This Amendment No. 1 ("Amendment") to the Master Services Agreement dated January 15, 2024 ("Agreement") is entered into as of June 1, 2024, between TechCorp Solutions Inc. ("Service Provider") and Global Enterprises LLC ("Client").
+
+RECITALS
+
+WHEREAS, the parties entered into the Agreement to govern the provision of software development and technical services;
+
+WHEREAS, Client desires to expand the scope of services and modify certain payment terms;
+
+WHEREAS, the parties wish to amend the Agreement as set forth below;
+
+NOW, THEREFORE, in consideration of the mutual covenants and agreements herein, the parties agree as follows:
+
+1. REVISED PAYMENT RATES
+
+Section 3.1 of the Agreement is hereby amended to reflect updated hourly rates effective July 1, 2024:
+
+   - Senior Developer: $195 per hour (previously $185)
+   - Mid-level Developer: $145 per hour (previously $135)
+   - Junior Developer: $100 per hour (previously $95)
+   - DevOps Engineer: $175 per hour (previously $165)
+   - Project Manager: $165 per hour (previously $155)
+   - NEW: AI/ML Specialist: $225 per hour
+   - NEW: Security Architect: $210 per hour
+
+Rationale: Rate increase reflects market adjustments and addition of specialized roles for AI integration project.
+
+2. EXTENDED PAYMENT TERMS
+
+Section 3.3 is amended to extend payment terms for invoices exceeding $100,000:
+
+   (a) Standard invoices ($0-$100,000): Net 30 days
+   (b) Large invoices (>$100,000): Net 45 days
+   (c) Enterprise projects (>$500,000): Net 60 days with milestone-based payments
+
+Late payment interest remains at 1.5% per month.
+
+3. ADDITIONAL SERVICES
+
+The following services are added to the scope in Section 1.1:
+
+   (a) Artificial Intelligence and Machine Learning development
+   (b) Cybersecurity auditing and penetration testing
+   (c) Cloud cost optimization consulting
+   (d) 24/7 production support (subject to separate support agreement)
+
+Service Provider shall provide these services subject to resource availability and Client's execution of applicable SOWs.
+
+4. PERFORMANCE METRICS AND SLAs
+
+A new Section 10 is added to the Agreement:
+
+10. SERVICE LEVEL AGREEMENT
+
+10.1 Availability: Service Provider commits to 99.5% uptime for production systems managed under this Agreement.
+
+10.2 Response Times:
+   - Critical Issues (P1): 2-hour response, 8-hour resolution target
+   - High Priority (P2): 4-hour response, 24-hour resolution target
+   - Medium Priority (P3): 1 business day response, 3 business days resolution
+   - Low Priority (P4): 3 business days response, reasonable efforts for resolution
+
+10.3 Reporting: Monthly performance reports provided within five (5) business days of month-end.
+
+10.4 Service Credits: If Service Provider fails to meet 99.5% uptime, Client receives 5% service credit for that month. Credits capped at 25% of monthly fees.
+
+5. INSURANCE REQUIREMENTS
+
+Client requires Service Provider to maintain the following insurance coverage:
+
+   (a) Cyber Liability Insurance: $5 million per occurrence
+   (b) Professional Liability (E&O): $3 million per occurrence
+   (c) General Liability: $2 million per occurrence
+   (d) Workers' Compensation: Statutory limits
+
+Certificates of Insurance to be provided within thirty (30) days of this Amendment's execution.
+
+6. DATA PROTECTION ADDENDUM
+
+The parties acknowledge that Service Provider processes Client's data and agree to execute a separate Data Processing Addendum ("DPA") compliant with GDPR, CCPA, and applicable privacy regulations within sixty (60) days.
+
+7. SUBCONTRACTOR APPROVAL
+
+Section 9.4 is amended to require prior written approval for any subcontractors or third parties performing more than 15% of services under any SOW. Service Provider remains fully liable for subcontractor performance.
+
+8. TERM EXTENSION
+
+The Initial Term defined in Section 2.1 is extended by twelve (12) months, now ending on January 15, 2027.
+
+9. ANNUAL SPENDING COMMITMENT
+
+Client commits to minimum annual spending of $750,000 for the period July 1, 2024 through June 30, 2025. If actual spending falls below this threshold, Client shall pay the difference within thirty (30) days of the period end.
+
+In consideration, Service Provider provides:
+   - Priority resource allocation
+   - 10% discount on rates for projects exceeding $200,000
+   - Dedicated account manager
+   - Quarterly executive business reviews
+
+10. GENERAL PROVISIONS
+
+10.1 Ratification: Except as modified by this Amendment, all terms and conditions of the Agreement remain in full force and effect.
+
+10.2 Counterparts: This Amendment may be executed in counterparts, each deemed an original.
+
+10.3 Effective Date: This Amendment is effective as of June 1, 2024.
+
+IN WITNESS WHEREOF, the parties have executed this Amendment as of the date first written above.
+
+TECHCORP SOLUTIONS INC.                    GLOBAL ENTERPRISES LLC
+
+By: _______________________                By: _______________________
+Name: Sarah Chen                           Name: Michael Rodriguez
+Title: Chief Executive Officer             Title: Chief Operating Officer
+Date: June 1, 2024                         Date: June 1, 2024
