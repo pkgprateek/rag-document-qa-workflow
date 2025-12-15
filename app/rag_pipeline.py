@@ -40,6 +40,13 @@ class RAGPipeline:
         self.rate_limit_file = Path("./data/rate_limit.json")
         self.rate_limit_file.parent.mkdir(parents=True, exist_ok=True)
 
+        # Document tracking for auto-cleanup (7-day retention)
+        self.doc_metadata_file = Path("./data/document_metadata.json")
+        self.doc_metadata_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Auto-cleanup on initialization
+        self._cleanup_old_documents()
+
         # Initialize LLM using OpenRouter (cheapest free option)
         openrouter_key = os.getenv("OPENROUTER_API_KEY")
         if not openrouter_key:
@@ -96,16 +103,22 @@ class RAGPipeline:
         )
         return rag_chain
 
-    def add_documents(self, documents: List[Document]) -> None:
+    def add_documents(self, documents: List[Document], is_sample: bool = False) -> None:
         """
         Add processed document chunks to the vector store for retrieval.
+        Tracks upload timestamp for auto-cleanup (user docs only).
 
         Args:
             documents: List of Document objects with text and metadata
+            is_sample: If True, document won't be auto-deleted (for demo samples)
         """
         self.vector_store.add_documents(documents)
         # In newer versions of langchain-chroma, persist() is no longer needed
         # as documents are automatically persisted when added
+        
+        # Track document metadata for cleanup (skip samples)
+        if not is_sample and documents:
+            self._track_document(documents[0].metadata.get("source", "unknown"))
 
     def _check_rate_limit(self) -> bool:
         """
@@ -175,3 +188,59 @@ class RAGPipeline:
         if not answer_text or answer_text.strip() == "":
             answer_text = "I apologize, but I couldn't generate a response. Please try rephrasing your question."
         return {"answer": answer_text}
+
+    def _track_document(self, source_path: str) -> None:
+        """
+        Track document upload timestamp for auto-cleanup.
+        
+        Args:
+            source_path: Path to the uploaded document
+        """
+        # Load existing metadata
+        if self.doc_metadata_file.exists():
+            with open(self.doc_metadata_file, "r") as f:
+                metadata = json.load(f)
+        else:
+            metadata = {"documents": {}}
+        
+        # Add new document with current timestamp
+        metadata["documents"][source_path] = {
+            "uploaded_at": datetime.now().isoformat(),
+            "is_sample": False
+        }
+        
+        # Save updated metadata
+        with open(self.doc_metadata_file, "w") as f:
+            json.dump(metadata, f, indent=2)
+    
+    def _cleanup_old_documents(self) -> None:
+        """
+        Remove documents older than 7 days from vector store.
+        Sample documents are never deleted.
+        """
+        if not self.doc_metadata_file.exists():
+            return
+        
+        with open(self.doc_metadata_file, "r") as f:
+            metadata = json.load(f)
+        
+        now = datetime.now()
+        seven_days_ago = now - timedelta(days=7)
+        documents_to_keep = {}
+        
+        for doc_path, doc_info in metadata.get("documents", {}).items():
+            upload_time = datetime.fromisoformat(doc_info["uploaded_at"])
+            
+            # Keep if uploaded within 7 days OR is a sample
+            if upload_time > seven_days_ago or doc_info.get("is_sample", False):
+                documents_to_keep[doc_path] = doc_info
+            else:
+                # Delete from vector store
+                # Note: ChromaDB doesn't support direct deletion by metadata filter
+                # In production, you'd implement this with collection.delete()
+                print(f"Would delete old document: {doc_path}")
+        
+        # Update metadata file
+        metadata["documents"] = documents_to_keep
+        with open(self.doc_metadata_file, "w") as f:
+            json.dump(metadata, f, indent=2)

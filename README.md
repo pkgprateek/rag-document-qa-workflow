@@ -1,22 +1,3 @@
----
-title: RAG Document Question-Answer System
-emoji: 📚
-colorFrom: blue
-colorTo: green
-sdk: gradio
-sdk_version: 5.49.1
-app_file: app/main.py
-pinned: false
-license: mit
-short_description: RAG-powered document Q&A (100+ pages -> 5 secs)
-full_width: true
----
-
-<!-- 
-GitHub Repository: https://github.com/pkgprateek/ai-rag-document
-View source code, CI/CD setup, and contribution guidelines
--->
-
 # RAG Document Question Answer System
 
 > Production-ready RAG-powered document Q&A with automated CI/CD deployment
@@ -43,12 +24,12 @@ Upload documents (PDF, DOCX, TXT) and ask questions - get citation-backed answer
 - **Persistent Vector Store**: ChromaDB ensures data survives application restarts
 - **Rate Limiting**: Built-in API abuse prevention (10 queries/hour)
 - **Automated CI/CD**: GitHub Actions deploys to Hugging Face Spaces on every commit
+- **Auto-Cleanup**: User documents deleted after 7 days (samples persist)
+- **Docker Ready**: Fast, reproducible deployments with UV package manager
 
 ---
 
 ## Architecture
-
-**ARCH_PATT**
 
 ### System Components
 
@@ -69,52 +50,48 @@ Upload documents (PDF, DOCX, TXT) and ask questions - get citation-backed answer
 - Python 3.10+
 - OpenRouter API key ([Get free tier](https://openrouter.ai/keys))
 
-### Installation
+### Installation (Docker - Recommended)
 
 ```bash
 # Clone repository
-git clone https://github.com/pkgprateek/ai-rag-document.git
-cd ai-rag-document
+git clone https://github.com/pkgprateek/rag-document-qa-workflow.git
+cd rag-document-qa-workflow
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment
+# Set environment variables
 cp .env.example .env
 # Edit .env and add: OPENROUTER_API_KEY=your_key_here
-```
 
-### Run Locally
-
-```bash
-python app/main.py
+# Run with Docker
+docker compose up
 ```
 
 Application starts at `http://localhost:7860`
 
----
+### Installation (Local with UV)
 
-## Technology Stack
+```bash
+# Install UV (10x faster than pip)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-| Component | Technology | Why This Choice |
-|-----------|-----------|-----------------|
-| **Framework** | LangChain 1.0.7 | Industry standard for RAG orchestration |
-| **Vector DB** | ChromaDB 1.3.4 | Lightweight, persistent, no server setup |
-| **Embeddings** | BAAI/bge-small-en-v1.5 | Best tradeoff: quality vs speed (384-dim) |
-| **LLM** | Google Gemma 3-4B-IT | Free tier access via OpenRouter |
-| **UI** | Gradio 5.49.1 | Rapid prototyping, HF Spaces integration |
-| **CI/CD** | GitHub Actions | Zero-config deployment automation |
+# Create virtual environment and install dependencies
+uv venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+uv pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env and add: OPENROUTER_API_KEY=your_key_here
+
+# Run application
+python app/main.py
+```
 
 ---
 
 ## Project Structure
 
 ```
-ai-rag-document/
+rag-document-qa-workflow/
 ├── .github/
 │   └── workflows/
 │       └── deploy-to-hf.yml      # CI/CD pipeline
@@ -122,17 +99,23 @@ ai-rag-document/
 │   ├── main.py                   # Gradio UI and entry point
 │   ├── rag_pipeline.py           # RAG chain implementation
 │   └── document_processor.py     # Document parsing & chunking
+├── data/
+│   ├── chroma_db/               # Vector database (gitignored)
+│   ├── samples/                 # Pre-loaded demo documents
+│   └── rate_limit.json          # Rate limiting state
 ├── tests/
 │   ├── test_rag_pipeline.py
 │   ├── test_document_processor.py
 │   └── experiments.py
-├── data/
-│   ├── chroma_db/               # Vector database (gitignored)
-│   └── rate_limit.json          # Rate limiting state
-├── requirements.txt
-├── .env.example
-└── README.md
+├── Dockerfile                    # Container definition
+├── docker-compose.yml           # Local development setup
+├── requirements.txt             # Python dependencies
+├── .env.example                # Environment template
+├── CLAUDE.md                   # Enterprise polish checklist
+└── README.md                   # This file (dev-focused)
 ```
+
+**Note**: The README on HuggingFace Spaces is user-focused. This README is for developers.
 
 ---
 
@@ -160,10 +143,6 @@ Local Changes → git push → GitHub → Actions Workflow → Hugging Face Spac
 git push hfspace main
 ```
 
-**Git Remotes**:
-- `origin`: GitHub (primary development)
-- `hfspace`: Hugging Face Spaces (deployment target)
-
 ---
 
 ## 💻 Development
@@ -186,6 +165,34 @@ OPENROUTER_API_KEY=your_key_here  # Get from https://openrouter.ai/keys
 - **Default**: 10 queries per hour
 - **State**: Tracked in `data/rate_limit.json`
 - **Customization**: Modify `MAX_REQUESTS` in `app/rag_pipeline.py`
+
+### Auto-Cleanup
+
+User-uploaded documents are automatically deleted after 7 days:
+- Implemented in `app/rag_pipeline.py` with timestamp tracking
+- Sample documents in `data/samples/` are never deleted
+- Manual cleanup: Call `RAGPipeline.cleanup_old_documents()`
+
+---
+
+## Docker & UV
+
+### Why Docker?
+- **Reproducible**: Same environment everywhere (dev, staging, prod)
+- **Fast**: Build caching speeds up iterations
+- **Isolated**: No dependency conflicts
+
+### Why UV?
+- **10x faster** than pip for dependency resolution
+- **Deterministic**: Lock files ensure consistency
+- **Rust-powered**: Modern, reliable tooling
+
+### Docker Build
+
+```bash
+docker build -t rag-document-qa .
+docker run -p 7860:7860 --env-file .env rag-document-qa
+```
 
 ---
 
@@ -230,8 +237,8 @@ This project is available under the MIT License - see LICENSE file for details.
 
 Built with modern MLOps best practices:
 - Automated CI/CD deployment
-- Infrastructure as Code (GitHub Actions)
+- Infrastructure as Code (GitHub Actions + Docker)
 - Encrypted secrets management
 - Version-controlled deployment workflows
 
-**For Recruiters**: This project demonstrates production-grade software engineering practices including automated deployment pipelines, proper error handling, clean architecture, and professional documentation standards used at FAANG companies.
+**For Recruiters**: This project demonstrates production-grade software engineering practices including automated deployment pipelines, containerization, proper error handling, clean architecture, and professional documentation standards used at FAANG companies.

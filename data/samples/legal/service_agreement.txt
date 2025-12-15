@@ -1,0 +1,114 @@
+MASTER SERVICES AGREEMENT
+
+This Master Services Agreement ("Agreement") is entered into as of January 15, 2024 ("Effective Date"), between:
+
+TechCorp Solutions Inc., a Delaware corporation with offices at 123 Innovation Drive, San Francisco, CA 94105 ("Service Provider"), and
+
+Global Enterprises LLC, a Delaware limited liability company with offices at 456 Business Plaza, New York, NY 10022 ("Client").
+
+1. SERVICES AND SCOPE
+
+1.1 Service Provider agrees to provide software development, cloud infrastructure management, and technical consulting services as detailed in Statement of Work documents ("SOW") executed under this Agreement.
+
+1.2 Each SOW will specify deliverables, timelines, acceptance criteria, and project-specific terms.
+
+2. TERM AND TERMINATION
+
+2.1 Initial Term: This Agreement shall commence on the Effective Date and continue for a period of twenty-four (24) months ("Initial Term").
+
+2.2 Renewal: Upon expiration of the Initial Term, this Agreement shall automatically renew for successive twelve (12) month periods unless either party provides written notice of non-renewal at least sixty (60) days prior to the end of the then-current term.
+
+2.3 Termination for Convenience: Either party may terminate this Agreement upon ninety (90) days prior written notice.
+
+2.4 Termination for Cause: Either party may terminate this Agreement immediately upon written notice if:
+   (a) The other party materially breaches any provision and fails to cure within thirty (30) days of written notice;
+   (b) The other party becomes insolvent, files for bankruptcy, or makes an assignment for the benefit of creditors;
+   (c) The other party ceases business operations.
+
+2.5 Effect of Termination: Upon termination, Client shall pay for all services performed through the termination date. Service Provider shall deliver all work product and return all Client materials within fifteen (15) business days.
+
+3. PAYMENT TERMS
+
+3.1 Fees: Client shall pay Service Provider the fees specified in each SOW. Unless otherwise stated, fees are based on time and materials at the following rates:
+   - Senior Developer: $185 per hour
+   - Mid-level Developer: $135 per hour
+   - Junior Developer: $95 per hour
+   - DevOps Engineer: $165 per hour
+   - Project Manager: $155 per hour
+
+3.2 Payment Schedule:
+   (a) Monthly invoicing for time and materials projects
+   (b) Milestone-based payments for fixed-price projects as detailed in SOW
+   (c) 50% deposit required for projects exceeding $50,000
+
+3.3 Payment Terms: All invoices are due within thirty (30) days of invoice date. Late payments shall accrue interest at 1.5% per month or the maximum rate permitted by law, whichever is less.
+
+3.4 Expenses: Client shall reimburse Service Provider for pre-approved, reasonable expenses including travel, accommodation, and third-party services. Expenses must be documented with receipts.
+
+4. INTELLECTUAL PROPERTY
+
+4.1 Work Product: All deliverables, code, documentation, and materials created specifically for Client under this Agreement ("Work Product") shall be the exclusive property of Client upon full payment.
+
+4.2 Pre-existing IP: Service Provider retains all rights to pre-existing intellectual property, tools, frameworks, and methodologies ("Background IP"). Client receives a perpetual, non-exclusive license to use Background IP incorporated into Work Product.
+
+4.3 Third-Party Components: Service Provider may incorporate open-source or third-party components with Client's approval, subject to applicable licenses.
+
+5. CONFIDENTIALITY
+
+5.1 Confidential Information: Each party agrees to maintain in confidence all non-public information disclosed by the other party ("Confidential Information").
+
+5.2 Exceptions: Confidential Information excludes information that: (a) is publicly available; (b) was known prior to disclosure; (c) is independently developed; (d) is rightfully obtained from third parties.
+
+5.3 Duration: Confidentiality obligations survive for three (3) years after disclosure or termination of this Agreement.
+
+6. WARRANTIES AND DISCLAIMERS
+
+6.1 Service Provider Warranties: Service Provider warrants that:
+   (a) Services will be performed in a professional and workmanlike manner;
+   (b) Work Product will conform to specifications in the applicable SOW;
+   (c) Service Provider has the right to grant licenses described herein.
+
+6.2 Client Warranties: Client warrants that it has the authority to enter this Agreement and provide necessary access and information.
+
+6.3 DISCLAIMER: EXCEPT AS EXPRESSLY PROVIDED, SERVICE PROVIDER MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+7. LIMITATION OF LIABILITY
+
+7.1 Cap on Damages: Service Provider's total liability under this Agreement shall not exceed the fees paid by Client in the twelve (12) months preceding the claim.
+
+7.2 Exclusion of Consequential Damages: IN NO EVENT SHALL EITHER PARTY BE LIABLE FOR INDIRECT, INCIDENTAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFITS.
+
+7.3 Exceptions: Limitations do not apply to: (a) breaches of confidentiality; (b) intellectual property infringement; (c) gross negligence or willful misconduct.
+
+8. INDEMNIFICATION
+
+8.1 Service Provider shall indemnify Client against third-party claims alleging that Work Product infringes intellectual property rights.
+
+8.2 Client shall indemnify Service Provider against claims arising from Client's use of Work Product outside the scope of this Agreement or Client-provided materials.
+
+9. GENERAL PROVISIONS
+
+9.1 Governing Law: This Agreement shall be governed by the laws of the State of Delaware, without regard to conflicts of law principles.
+
+9.2 Dispute Resolution: Disputes shall first be addressed through good-faith negotiation. If unresolved within thirty (30) days, disputes shall be submitted to binding arbitration in San Francisco, CA under AAA Commercial Arbitration Rules.
+
+9.3 Assignment: Neither party may assign this Agreement without prior written consent, except to a successor in a merger or acquisition.
+
+9.4 Independent Contractors: The parties are independent contractors. Nothing creates a partnership, joint venture, or employment relationship.
+
+9.5 Entire Agreement: This Agreement, together with all SOWs, constitutes the entire agreement and supersedes all prior negotiations and agreements.
+
+9.6 Amendments: Amendments must be in writing and signed by authorized representatives of both parties.
+
+9.7 Severability: If any provision is held invalid, the remainder shall continue in effect.
+
+9.8 Force Majeure: Neither party shall be liable for delays caused by circumstances beyond reasonable control.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
+
+TECHCORP SOLUTIONS INC.                    GLOBAL ENTERPRISES LLC
+
+By: _______________________                By: _______________________
+Name: Sarah Chen                           Name: Michael Rodriguez
+Title: Chief Executive Officer             Title: Chief Operating Officer
+Date: January 15, 2024                     Date: January 15, 2024
