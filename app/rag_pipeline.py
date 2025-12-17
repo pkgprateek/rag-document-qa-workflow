@@ -15,13 +15,39 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 class RAGPipeline:
-    def __init__(self, persist_directory: str = "./data/chroma_db"):
+    # Model configuration for multi-provider support
+    MODEL_CONFIG = {
+        "gpt-oss-120b": {
+            "provider": "groq",
+            "model": "openai/gpt-oss-120b",
+            "display": "GPT-OSS 120B (OpenAI)",
+            "temperature": 0.1,
+            "max_tokens": 1024,
+        },
+        "llama-3.3-70b": {
+            "provider": "groq",
+            "model": "llama-3.3-70b-versatile",
+            "display": "Llama 3.3 70B (Meta)",
+            "temperature": 0.1,
+            "max_tokens": 1024,
+        },
+        "gemma-3-27b": {
+            "provider": "openrouter",
+            "model": "google/gemma-3-27b-it:free",
+            "display": "Gemma 3 27B (Google)",
+            "temperature": 0.1,
+            "max_tokens": 512,
+        },
+    }
+
+    def __init__(self, persist_directory: str = "./data/chroma_db", default_model: str = "gpt-oss-120b"):
         """
-        Initialize RAG pipeline with embeddings, vector store, and LLM.
-        Sets up rate limiting (10 queries/hour) and uses OpenRouter API with free Gemma model.
+        Initialize RAG pipeline with embeddings, vector store, and multi-provider LLM support.
+        Sets up rate limiting (10 queries/hour) and supports Groq + OpenRouter APIs.
 
         Args:
             persist_directory: Path to store ChromaDB vector database (default: ./data/chroma_db)
+            default_model: Model key from MODEL_CONFIG (default: gpt-oss-120b)
         """
         # Initialize better embeddings (BAAI/bge-small-en-v1.5)
         self.embeddings = HuggingFaceEmbeddings(
@@ -47,25 +73,94 @@ class RAGPipeline:
         # Auto-cleanup on initialization
         self._cleanup_old_documents()
 
-        # Initialize LLM using OpenRouter (cheapest free option)
-        openrouter_key = os.getenv("OPENROUTER_API_KEY")
-        if not openrouter_key:
-            raise ValueError(
-                "OPENROUTER_API_KEY environment variable not set. "
-                "Get one free at https://openrouter.ai/keys"
-            )
-
-        # Using google/gemma-3-4b-it:free - free tier on OpenRouter
-        self.llm = ChatOpenAI(
-            model="google/gemma-3-4b-it:free",
-            openai_api_key=openrouter_key,
-            openai_api_base="https://openrouter.ai/api/v1",
-            temperature=0.1,
-            max_tokens=512,
-        )
+        # Initialize LLM with default model
+        self.current_model = default_model
+        self.llm = self._initialize_llm(default_model)
 
         # Create RAG chain
         self.rag_chain = self.create_rag_chain()
+    
+    def _initialize_llm(self, model_key: str):
+        """
+        Initialize LLM based on provider and model configuration.
+        Supports both Groq and OpenRouter providers.
+
+        Args:
+            model_key: Key from MODEL_CONFIG dictionary
+
+        Returns:
+            ChatOpenAI: Configured LLM instance
+
+        Raises:
+            ValueError: If model_key is invalid or required API key is missing
+        """
+        if model_key not in self.MODEL_CONFIG:
+            raise ValueError(
+                f"Invalid model key: {model_key}. "
+                f"Available models: {', '.join(self.MODEL_CONFIG.keys())}"
+            )
+        
+        config = self.MODEL_CONFIG[model_key]
+        provider = config["provider"]
+        
+        if provider == "groq":
+            # Groq API configuration
+            groq_key = os.getenv("GROQ_API_KEY")
+            if not groq_key:
+                raise ValueError(
+                    "GROQ_API_KEY environment variable not set. "
+                    "Get one free at https://console.groq.com/keys"
+                )
+            
+            return ChatOpenAI(
+                model=config["model"],
+                openai_api_key=groq_key,
+                openai_api_base="https://api.groq.com/openai/v1",
+                temperature=config["temperature"],
+                max_tokens=config["max_tokens"],
+            )
+        
+        elif provider == "openrouter":
+            # OpenRouter API configuration
+            openrouter_key = os.getenv("OPENROUTER_API_KEY")
+            if not openrouter_key:
+                raise ValueError(
+                    "OPENROUTER_API_KEY environment variable not set. "
+                    "Get one free at https://openrouter.ai/keys"
+                )
+            
+            return ChatOpenAI(
+                model=config["model"],
+                openai_api_key=openrouter_key,
+                openai_api_base="https://openrouter.ai/api/v1",
+                temperature=config["temperature"],
+                max_tokens=config["max_tokens"],
+            )
+        
+        else:
+            raise ValueError(f"Unknown provider: {provider}")
+    
+    def switch_model(self, model_key: str) -> str:
+        """
+        Dynamically switch to a different LLM model and recreate the RAG chain.
+
+        Args:
+            model_key: Key from MODEL_CONFIG dictionary
+
+        Returns:
+            str: Display name of the switched model
+
+        Raises:
+            ValueError: If model_key is invalid or API key is missing
+        """
+        # Initialize new LLM
+        self.llm = self._initialize_llm(model_key)
+        self.current_model = model_key
+        
+        # Recreate RAG chain with new LLM
+        self.rag_chain = self.create_rag_chain()
+        
+        return self.MODEL_CONFIG[model_key]["display"]
 
     def create_rag_chain(self):
         """

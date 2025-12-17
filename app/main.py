@@ -61,6 +61,25 @@ class DocumentRagApp:
         except Exception as e:
             return f"Error: {str(e)}"
 
+    def switch_model(self, model_choice):
+        """Handle model switching from UI radio button"""
+        # Map UI choices to model keys
+        model_map = {
+            "GPT-OSS 120B (OpenAI) - Default": "gpt-oss-120b",
+            "Llama 3.3 70B (Meta)": "llama-3.3-70b",
+            "Gemma 3 27B (Google)": "gemma-3-27b",
+        }
+
+        model_key = model_map.get(model_choice)
+        if not model_key:
+            return f"❌ Invalid model selection"
+
+        try:
+            display_name = self.rag_pipeline.switch_model(model_key)
+            return f"✓ Switched to {display_name}"
+        except Exception as e:
+            return f"❌ Error switching model: {str(e)}"
+
     def ask(self, question):
         if not self.loaded_documents:
             return "Please load documents first"
@@ -168,10 +187,10 @@ span, p, div { font-family: var(--font-body); }
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border-glass) !important;
     border-radius: 20px !important;
-    padding: 2rem !important; /* Internal padding for the card content */
+    padding: 2rem 2rem 1.5rem 2rem !important; /* Reduced bottom padding */
     margin-bottom: 2rem !important;
     box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5) !important;
-    height: 100% !important; /* Attempt to stretch */
+    height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
 }
@@ -197,9 +216,15 @@ span, p, div { font-family: var(--font-body); }
 
 /* Upload Area specific */
 .gradio-file {
-    background-color: rgba(0, 0, 0, 0.2) !important;
-    border: 2px dashed rgba(255, 255, 255, 0.3) !important; /* Brighter border */
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.3) !important;
     border-radius: 12px !important;
+    padding: 1rem !important;
+}
+
+.gradio-file:hover {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    border-color: var(--accent) !important;
 }
 
 .gradio-dropdown:hover, .gradio-textbox textarea:hover {
@@ -294,6 +319,47 @@ span, p, div { font-family: var(--font-body); }
     background: rgba(16, 185, 129, 0.25);
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
 }
+
+/* --- MODEL SELECTOR --- */
+.model-selector {
+    background: rgba(0, 0, 0, 0.15) !important;
+    border-radius: 8px !important;
+    padding: 0.75rem !important;
+    margin-bottom: 1rem !important;
+    border: 1px solid var(--border-glass) !important;
+}
+
+.model-selector label {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--border-glass) !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 6px !important;
+    transition: all 0.2s !important;
+    cursor: pointer !important;
+    margin: 0.2rem 0 !important;
+    display: block !important;
+    font-size: 0.875rem !important;
+}
+
+.model-selector label:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: var(--accent) !important;
+    transform: translateX(3px) !important;
+}
+
+.model-selector input:checked + label {
+    background: var(--primary-gradient) !important;
+    border-color: transparent !important;
+    font-weight: 600 !important;
+    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.model-status {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    padding: 0.25rem 0.5rem;
+    margin-top: 0.1rem;
+}
 """
 
 with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
@@ -311,9 +377,9 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
             </div>
         """)
 
-        with gr.Row(equal_height=True):  # Force Row to try to equalize height
-            # --- LEFT: SETUP CARD ---
-            with gr.Column(scale=4):
+        with gr.Row(equal_height=True):
+            # --- LEFT: SETUP CARD (45%) ---
+            with gr.Column(scale=9):
                 with gr.Group(elem_classes="glass-card"):
                     gr.Markdown(
                         "### SELECT SAMPLE DOCUMENTS", elem_classes="card-header"
@@ -342,13 +408,13 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
 
                     # Visible Divider - Increased Opacity
                     gr.HTML(
-                        '<div style="margin: 2rem 0; height: 1px; background: rgba(255,255,255,0.3);"></div>'
+                        '<div style="margin: 2rem 0; height: 1px; background: rgba(255,255,255,0.5);"></div>'
                     )
 
                     gr.Markdown("### OR UPLOAD FILES", elem_classes="card-header")
                     file_upload = gr.File(
                         file_types=[".pdf", ".docx", ".txt"],
-                        show_label=False,
+                        show_label=True,
                         height=240,  # Increased height
                     )
 
@@ -360,13 +426,32 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                     )
                     upload_status = gr.Markdown("")
 
-                    # Spacer to fill height if needed
-                    gr.HTML('<div style="flex-grow: 1;"></div>')
+                    # Divider
+                    gr.HTML(
+                        '<div style="margin: 1rem 0; height: 1px; background: rgba(255,255,255,0.15);"></div>'
+                    )
 
-            # --- RIGHT: INTERACTION CARD ---
-            with gr.Column(scale=6):
+                    # Model Selector (Compact)
+                    gr.Markdown("**🤖 AI Model**", elem_classes="card-subheader")
+                    model_selector = gr.Radio(
+                        choices=[
+                            "GPT-OSS 120B (OpenAI) - Default",
+                            "Llama 3.3 70B (Meta)",
+                            "Gemma 3 27B (Google)",
+                        ],
+                        value="GPT-OSS 120B (OpenAI) - Default",
+                        elem_classes="model-selector",
+                        show_label=False,
+                    )
+                    model_status = gr.Markdown(
+                        "_GPT-OSS 120B active_",
+                        elem_classes="model-status",
+                    )
+
+            # --- RIGHT: INTERACTION CARD (55%) ---
+            with gr.Column(scale=11):
                 with gr.Group(elem_classes="glass-card"):
-                    gr.Markdown("### INTELLIGENT ANALYSIS", elem_classes="card-header")
+                    gr.Markdown("### ASK ANYTHING", elem_classes="card-header")
 
                     # Question Input
                     question = gr.Textbox(
@@ -417,6 +502,11 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
     load_finops.click(fn=lambda: app.load_samples("FinOps"), outputs=load_status)
 
     process_btn.click(fn=app.process_file, inputs=file_upload, outputs=upload_status)
+
+    # Model switching
+    model_selector.change(
+        fn=app.switch_model, inputs=model_selector, outputs=model_status
+    )
 
     q1.click(
         fn=lambda: f"**Query:** Termination Terms\n\n{app.ask('What are the termination conditions?')}",

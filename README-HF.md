@@ -59,12 +59,14 @@ No signup required. Your documents are processed locally and auto-deleted after 
 ```bash
 git clone https://github.com/pkgprateek/rag-document-qa-workflow.git
 cd rag-document-qa-workflow
-echo "OPENROUTER_API_KEY=your_key" > .env
+echo "GROQ_API_KEY=your_key" > .env
+echo "OPENROUTER_API_KEY=your_key" >> .env
 docker compose up
 # → http://localhost:7860
 ```
 
-[Get free API key](https://openrouter.ai/keys) · [View source on GitHub](https://github.com/pkgprateek/rag-document-qa-workflow)
+**Get Free API Keys:** [Groq](https://console.groq.com/keys) (Required) · [OpenRouter](https://openrouter.ai/keys) (Optional)  
+[View source on GitHub](https://github.com/pkgprateek/rag-document-qa-workflow)
 
 ---
 
