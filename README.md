@@ -1,6 +1,6 @@
-# 🚀 Enterprise RAG Platform
+# QA Enterprise RAG Platform
 
-**Question your documents. Get cited answers in seconds.**
+**Question your documents. Get cited answers in seconds. Secure, Scalable, Agentic Document Intelligence for the Modern Enterprise.**
 
 [![Live Demo](https://img.shields.io/badge/🔴_LIVE-Try_Demo-blue?style=for-the-badge)](https://pkgprateek-ai-rag-document.hf.space/)
 [![Deploy](https://github.com/pkgprateek/ai-rag-document/actions/workflows/deploy-to-hf.yml/badge.svg)](https://github.com/pkgprateek/ai-rag-document/actions/workflows/deploy-to-hf.yml)
@@ -18,7 +18,7 @@
 
 ## Why This Matters
 
-**Knowledge workers spend 2.5 hours daily searching for information** buried in documents. Enterprise RAG eliminates that friction—upload your contracts, research papers, or financial reports, ask questions in plain English, and get precise answers with page citations in under 5 seconds.
+Knowledge workers **spend 2.5 hours daily** searching for information buried in documents. Enterprise RAG eliminates that friction—upload your contracts, research papers, or financial reports, ask questions in plain English, and get precise answers with page citations in under 5 seconds.
 
 ---
 
