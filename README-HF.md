@@ -46,11 +46,11 @@ No signup required. Your documents are processed locally and auto-deleted after 
 
 ## Features
 
-- 📄 **Multi-format**: PDF, DOCX, TXT
-- 🔗 **Citations**: Every answer references source documents  
-- 🏢 **Domain demos**: Legal, Research, FinOps pre-loaded
-- 🔒 **Privacy-first**: Local processing, auto-delete after 7 days
-- ⚡ **Fast**: 3-6 second response time
+- **Multi-format**: PDF, DOCX, TXT
+- **Citations**: Every answer references source documents  
+- **Domain demos**: Legal, Research, FinOps pre-loaded
+- **Privacy-first**: Local processing, auto-delete after 7 days
+- **Fast**: 1-3 second response time
 
 ---
 

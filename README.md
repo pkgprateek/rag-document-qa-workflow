@@ -87,37 +87,24 @@ python app/main.py
 
 ---
 
-## Production Checklist
+## Production Features Checklist
 
 > 10 criteria for enterprise-grade RAG. Each is satisfied by this platform.
 
-| # | Criterion | Status | Details |
-|---|-----------|--------|---------|
-| 1 | **Multi-format ingestion** | ✅ | PDF, DOCX, TXT with intelligent parsing |
-| 2 | **Semantic chunking** | ✅ | 1000-char chunks, 200-char overlap |
-| 3 | **Production embeddings** | ✅ | bge-small-en-v1.5 (MTEB optimized) |
-| 4 | **Persistent storage** | ✅ | ChromaDB survives restarts |
-| 5 | **Citation tracking** | ✅ | Every answer links to source chunks |
-| 6 | **Rate limiting** | ✅ | 10 queries/hour (configurable) |
-| 7 | **Privacy controls** | ✅ | Auto-delete after 7 days |
-| 8 | **Domain demos** | ✅ | Legal, Research, FinOps samples |
-| 9 | **Docker deployment** | ✅ | One-command production deploy |
-| 10 | **Monitoring hooks** | ✅ | Health checks, error logging |
-
-📖 **[Design Decisions →](docs/DESIGN_DECISIONS.md)** — Deep dive into architectural choices.
-
----
-
-## Features
-
 | Feature | Description |
-|---------|-------------|
-| 📄 **Multi-format** | PDF, DOCX, TXT with intelligent parsing |
-| 🔗 **Citations** | Source references in every answer |
-| 🏢 **Vertical demos** | Pre-loaded Legal/Research/FinOps samples |
-| 🔒 **Privacy** | Auto-delete after 7 days, local processing |
-| ⚡ **Fast** | 3-6 second end-to-end response time |
-| 🐳 **Portable** | Docker-ready, one-command deploy |
+|----------|----------|
+| **Multi-format ingestion** | PDF, DOCX, TXT with intelligent parsing |
+| **Semantic chunking** | 1000-char chunks, 200-char overlap |
+| **Production embeddings** | bge-small-en-v1.5 (MTEB optimized) |
+| **Persistent storage** | ChromaDB survives restarts |
+| **Citation tracking** | Every answer links to source chunks |
+| **Rate limiting** | 10 queries/hour (configurable) |
+| **Privacy controls** | Auto-delete after 7 days |
+| **Monitoring hooks** | Health checks, error logging |
+| **Fast** | 1-3 second end-to-end response time |
+| **Portable** | Docker-ready, one-command deploy |
+
+**[Design Decisions →](docs/DESIGN_DECISIONS.md)** — Deep dive into architectural choices.
 
 ---
 
@@ -125,8 +112,8 @@ python app/main.py
 
 | Metric | Value |
 |--------|-------|
-| **End-to-end latency** | 3-6 seconds |
-| **100-page contract** | 8s process, 3s query |
+| **End-to-end latency** | 1-3 seconds |
+| **100-page contract** | 5-6s process, 1.5s query |
 | **Hallucination rate** | ~4-7% (vs 18% baseline) |
 | **Throughput** | ~12 docs/min |
 
