@@ -12,67 +12,77 @@ short_description: Document intelligence for Legal, Research, FinOps
 full_width: true
 ---
 
-# Enterprise RAG + Agentic Automation
+# 🚀 Enterprise RAG Platform
 
-**Upload documents → Ask questions in plain English → Get cited answers in <5 seconds**
+**Question your documents. Get cited answers in seconds.**
 
-For Legal teams (contracts), Research labs (papers), FinOps departments (cloud spend).
+Upload contracts, research papers, or financial reports → Ask questions in plain English → Get precise answers with page citations.
 
 ---
 
-## Architecture
+## How It Works
 
 ```mermaid
 graph LR
-    A[📄 PDF/DOCX/TXT] -->|Chunk| B[🧠 bge-small-en-v1.5]
-    B --> C[(ChromaDB)]
-    D[💬 Question] --> E[🔍 Top-4 Retrieval]
-    C --> E
-    E --> F[🤖 Gemma 3-4B-IT]
-    F --> G[✨ Cited Answer]
+    A["📄 Upload"] --> B["✂️ Chunk"]
+    B --> C["🧠 Embed"]
+    C --> D["💬 Ask"]
+    D --> E["✨ Cited Answer"]
 ```
+
+**3 steps**: Upload → Ask → Get answers with citations.
 
 ---
 
-## Quick Start
+## Try It Now
 
-```bash
-git clone https://github.com/pkgprateek/rag-document-qa-workflow.git
-cd rag-document-qa-workflow
+1. **Select a vertical** (Legal, Research, or FinOps) — pre-loaded samples ready
+2. **Ask a sample question** or type your own
+3. **See the magic** — cited answers in seconds
 
-echo "OPENROUTER_API_KEY=your_key" > .env
-docker compose up
-
-# http://localhost:7860
-```
-
-[Get free API key](https://openrouter.ai/keys)
+No signup required. Your documents are processed locally and auto-deleted after 7 days.
 
 ---
 
 ## Features
 
-- Citation-backed answers from your documents
-- Pre-loaded demos (Legal/Research/FinOps)
-- Auto-deletes user data after 7 days
-- Rate limiting + persistent storage included
+- 📄 **Multi-format**: PDF, DOCX, TXT
+- 🔗 **Citations**: Every answer references source documents  
+- 🏢 **Domain demos**: Legal, Research, FinOps pre-loaded
+- 🔒 **Privacy-first**: Local processing, auto-delete after 7 days
+- ⚡ **Fast**: 3-6 second response time
 
 ---
 
-## Privacy
+## Run Locally
 
-Documents processed locally → ChromaDB storage → Auto-deleted after 7 days → Never used for training
+```bash
+git clone https://github.com/pkgprateek/rag-document-qa-workflow.git
+cd rag-document-qa-workflow
+echo "OPENROUTER_API_KEY=your_key" > .env
+docker compose up
+# → http://localhost:7860
+```
+
+[Get free API key](https://openrouter.ai/keys) · [View source on GitHub](https://github.com/pkgprateek/rag-document-qa-workflow)
 
 ---
 
-## Consulting
+## 🔒 Privacy
 
-**2-week paid pilots**: Ingest your documents, deploy on your infra, ROI analysis delivered.
-
-📅 [Book discovery call](https://calendly.com/your-link-here)
+- Documents processed locally (never sent externally)
+- Stored in encrypted ChromaDB
+- Auto-deleted after 7 days
+- Never used for model training
 
 ---
 
-**Demo**: [huggingface.co/spaces/pkgprateek/ai-rag-document](https://huggingface.co/spaces/pkgprateek/ai-rag-document)
+## Enterprise Pilots
 
-**Contact**: [@pkgprateek](https://github.com/pkgprateek)
+**2-week paid pilots** for teams ready to deploy RAG on their documents.
+
+📅 [Book discovery call](https://cal.com/your-link)
+
+---
+
+**Built by [Prateek Kumar Goel](https://github.com/pkgprateek)** · MIT License
