@@ -57,7 +57,10 @@ class DocumentRagApp:
                 return "Unsupported format"
 
             self.rag_pipeline.add_documents(chunks, is_sample=False)
-            return f"✓ Processed {len(chunks)} chunks"
+            self.loaded_documents.append(os.path.basename(file.name))
+            return (
+                f"✓ Processed {len(chunks)} chunks from {os.path.basename(file.name)}"
+            )
         except Exception as e:
             return f"Error: {str(e)}"
 
@@ -193,6 +196,27 @@ span, p, div { font-family: var(--font-body); }
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
+}
+
+/* Prevent left column from expanding - constrain height */
+.gradio-row > .gradio-column:first-child .glass-card {
+    max-height: 85vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom scrollbar for left column */
+.gradio-row > .gradio-column:first-child .glass-card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.gradio-row > .gradio-column:first-child .glass-card::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.gradio-row > .gradio-column:first-child .glass-card::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .card-header {
@@ -371,13 +395,13 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                 <p>Secure, Scalable, Agentic Document Intelligence for the Modern Enterprise.</p>
                 <div style="margin-top: 3rem; margin-bottom: 6rem;" id="calendar-button">
                     <a href="https://cal.com" target="_blank" class="calendar-badge">
-                        <span>📅</span> Book a 30-min Strategy Call
+                        <span>📅</span> Book 15m Discovery Call
                     </a>
                 </div>
             </div>
         """)
 
-        with gr.Row(equal_height=True):
+        with gr.Row(equal_height=False):
             # --- LEFT: SETUP CARD (45%) ---
             with gr.Column(scale=9):
                 with gr.Group(elem_classes="glass-card"):
@@ -411,7 +435,7 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         '<div style="margin: 2rem 0; height: 1px; background: rgba(255,255,255,0.5);"></div>'
                     )
 
-                    gr.Markdown("### OR UPLOAD FILES", elem_classes="card-header")
+                    gr.Markdown("### OR UPLOAD DOCUMENTS", elem_classes="card-header")
                     file_upload = gr.File(
                         file_types=[".pdf", ".docx", ".txt"],
                         show_label=True,
@@ -432,7 +456,7 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                     )
 
                     # Model Selector (Compact)
-                    gr.Markdown("**🤖 AI Model**", elem_classes="card-subheader")
+                    gr.Markdown("**🤖 Choose AI Model**", elem_classes="card-subheader")
                     model_selector = gr.Radio(
                         choices=[
                             "GPT-OSS 120B (OpenAI) - Default",
@@ -444,7 +468,7 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         show_label=False,
                     )
                     model_status = gr.Markdown(
-                        "_GPT-OSS 120B active_",
+                        ":green_circle: _GPT-OSS 120B active_",
                         elem_classes="model-status",
                     )
 
@@ -509,19 +533,19 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
     )
 
     q1.click(
-        fn=lambda: f"**Query:** Termination Terms\n\n{app.ask('What are the termination conditions?')}",
+        fn=lambda: app.ask("What are the termination conditions?"),
         outputs=answer,
     )
     q2.click(
-        fn=lambda: f"**Query:** Payment Summary\n\n{app.ask('Summarize payment terms')}",
+        fn=lambda: app.ask("Summarize payment terms"),
         outputs=answer,
     )
     q3.click(
-        fn=lambda: f"**Query:** Key Findings\n\n{app.ask('Summarize key findings')}",
+        fn=lambda: app.ask("Summarize key findings"),
         outputs=answer,
     )
     q4.click(
-        fn=lambda: f"**Query:** Risk Analysis\n\n{app.ask('What are the key risks mentioned?')}",
+        fn=lambda: app.ask("What are the key risks mentioned?"),
         outputs=answer,
     )
 
