@@ -10,7 +10,7 @@
 <!-- Replace with actual screenshot: assets/demo-screenshot.png -->
 <p align="center">
   <a href="https://pkgprateek-ai-rag-document.hf.space/">
-    <img src="https://via.placeholder.com/800x450.png?text=Live+Demo+→+Click+to+Try" alt="Enterprise RAG Demo" width="700"/>
+    <img src="assets/demo-screenshot.jpeg" alt="Enterprise RAG Demo" width="700"/>
   </a>
 </p>
 
