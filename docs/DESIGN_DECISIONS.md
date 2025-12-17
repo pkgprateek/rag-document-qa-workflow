@@ -8,9 +8,19 @@
 | **Embeddings** | bge-small-en-v1.5 | Best quality/speed ratio on MTEB |
 | **Vector DB** | ChromaDB | Embedded, persistent, no server |
 | **Retrieval** | Top-4 cosine | k=4 tested optimal (vs k=2,8,16) |
-| **LLM** | Gemma 3-4B via OpenRouter | Free tier, citation-friendly |
+| **LLM** | GPT-OSS 120B (default), Llama 3.3 70B, Gemma 3 27B | Multi-provider flexibility via Groq + OpenRouter |
 | **Rate limit** | 10/hour | Prevents API abuse |
 | **Cleanup** | 7-day auto-delete | Privacy without user friction |
+
+---
+
+## Model Selection Rationale
+
+| Model | Provider | Use Case | Strengths |
+|-------|----------|----------|------------|
+| **GPT-OSS 120B** (Default) | Groq | General enterprise Q&A | Best quality, fast inference, OpenAI architecture |
+| **Llama 3.3 70B** | Groq | Complex reasoning | Open-source, strong context understanding |
+| **Gemma 3 27B** | OpenRouter | Cost-optimized | Free tier, Google-trained, efficient |
 
 ---
 

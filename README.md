@@ -46,13 +46,13 @@ flowchart TB
     end
     
     subgraph Generation ["✨ Generation"]
-        G["🤖 Gemma 3-4B-IT"]
+        G["🤖 Multi-Provider LLM<br/>GPT-OSS 120B (default)<br/>Llama 3.3 70B · Gemma 3 27B"]
         H["📝 Cited Answer"]
         F --> G --> H
     end
 ```
 
-**Stack**: LangChain 1.0.7 · ChromaDB 1.3.4 · sentence-transformers · OpenRouter
+**Stack**: LangChain 1.0.7 · ChromaDB 1.3.4 · sentence-transformers · Groq + OpenRouter
 
 ---
 
@@ -63,8 +63,9 @@ flowchart TB
 git clone https://github.com/pkgprateek/rag-document-qa-workflow.git
 cd rag-document-qa-workflow
 
-# Set your API key (free from OpenRouter)
-echo "OPENROUTER_API_KEY=your_key_here" > .env
+# Set your API keys (both free)
+echo "GROQ_API_KEY=your_key_here" > .env
+echo "OPENROUTER_API_KEY=your_key_here" >> .env
 
 # Run with Docker (recommended)
 docker compose up
@@ -83,7 +84,9 @@ python app/main.py
 
 </details>
 
-🔑 [Get free OpenRouter API key](https://openrouter.ai/keys)
+🔑 **Get Your Free API Keys**  
+- [Groq API key](https://console.groq.com/keys) (Required - GPT-OSS & Llama models)  
+- [OpenRouter API key](https://openrouter.ai/keys) (Optional - Gemma model)
 
 ---
 
