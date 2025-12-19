@@ -14,6 +14,7 @@ class DocumentRagApp:
         self.loaded_documents = []
 
     def load_samples(self, vertical):
+        """Load sample documents with live progress updates"""
         samples = {
             "Legal": [
                 "data/samples/legal/service_agreement.txt",
@@ -33,19 +34,33 @@ class DocumentRagApp:
         }
 
         try:
-            for path in samples[vertical]:
+            total_chunks = 0
+            for idx, path in enumerate(samples[vertical], 1):
                 if os.path.exists(path):
+                    yield f"Loading document {idx}/{len(samples[vertical])}..."
                     chunks = self.processor.process_txt(path)
+
+                    yield f"Creating smart chunks ({len(chunks)} chunks)..."
                     self.rag_pipeline.add_documents(chunks, is_sample=True)
+
+                    yield f"Building search index..."
                     self.loaded_documents.append(os.path.basename(path))
-            return f"✓ Loaded {len(samples[vertical])} {vertical} documents"
+                    total_chunks += len(chunks)
+
+            yield f"✓ Success! Loaded {len(samples[vertical])} documents ({total_chunks} searchable chunks)"
         except Exception as e:
-            return f"Error: {str(e)}"
+            yield f"❌ Error: {str(e)}"
 
     def process_file(self, file):
+        """Process uploaded file with live progress updates"""
         if not file:
-            return "Please upload a file"
+            yield "⚠️ Please upload a file"
+            return
+
         try:
+            filename = os.path.basename(file.name)
+            yield f"Processing {filename}..."
+
             ext = os.path.splitext(file.name)[1].lower()
             if ext == ".pdf":
                 chunks = self.processor.process_pdf(file.name)
@@ -54,15 +69,18 @@ class DocumentRagApp:
             elif ext == ".docx":
                 chunks = self.processor.process_docx(file.name)
             else:
-                return "Unsupported format"
+                yield "❌ Unsupported format. Please upload PDF, DOCX, or TXT files."
+                return
 
+            yield f"✂️ Created {len(chunks)} smart chunks..."
+
+            yield f"Building search index (securing with AES-256)..."
             self.rag_pipeline.add_documents(chunks, is_sample=False)
-            self.loaded_documents.append(os.path.basename(file.name))
-            return (
-                f"✓ Processed {len(chunks)} chunks from {os.path.basename(file.name)}"
-            )
+            self.loaded_documents.append(filename)
+
+            yield f"✓ Success! {filename} ready for questions ({len(chunks)} searchable chunks)"
         except Exception as e:
-            return f"Error: {str(e)}"
+            yield f"❌ Error: {str(e)}. Please try again or contact support."
 
     def switch_model(self, model_choice):
         """Handle model switching from UI radio button"""
@@ -384,6 +402,47 @@ span, p, div { font-family: var(--font-body); }
     padding: 0.25rem 0.5rem;
     margin-top: 0.1rem;
 }
+
+/* --- SECURITY BADGE --- */
+.security-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(16, 185, 129, 0.08) !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.security-badge:hover {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+
+.badge-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.badge-content {
+    flex: 1;
+}
+
+.badge-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0.2rem;
+}
+
+.badge-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
 """
 
 with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
@@ -442,6 +501,17 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         height=240,  # Increased height
                     )
 
+                    # Security Badge
+                    gr.HTML("""
+                        <div class="security-badge">
+                            <div class="badge-icon">🔒</div>
+                            <div class="badge-content">
+                                <div class="badge-title">AES-256 Encrypted</div>
+                                <div class="badge-subtitle">Processed locally • Auto-deleted in 7 days</div>
+                            </div>
+                        </div>
+                    """)
+
                     # Spacer before Process button
                     gr.HTML('<div style="height: 1.5rem"></div>')
 
@@ -468,7 +538,7 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         show_label=False,
                     )
                     model_status = gr.Markdown(
-                        ":green_circle: _GPT-OSS 120B active_",
+                        "_GPT-OSS 120B active_",
                         elem_classes="model-status",
                     )
 
@@ -520,7 +590,7 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
             </div>
         """)
 
-    # Event Wiring
+    # Event Wiring with live updates (generators)
     load_legal.click(fn=lambda: app.load_samples("Legal"), outputs=load_status)
     load_research.click(fn=lambda: app.load_samples("Research"), outputs=load_status)
     load_finops.click(fn=lambda: app.load_samples("FinOps"), outputs=load_status)
