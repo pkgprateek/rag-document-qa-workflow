@@ -120,14 +120,17 @@ css = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
 
 :root {
-    /* Brand Palette */
-    --primary-gradient: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
+    /* Material Design Color Palette */
+    --primary-gradient: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    --cta-discovery-gradient: linear-gradient(135deg, #00C853 0%, #00A152 100%);
     --surface-dark: #0B0F19;
     --surface-glass: rgba(17, 24, 39, 0.7);
     --border-glass: rgba(255, 255, 255, 0.08); 
     --text-primary: #F9FAFB;
     --text-secondary: #9CA3AF;
-    --accent: #10B981;
+    --accent: #2196F3;
+    --accent-hover: #1976D2;
+    --cta-discovery: #00C853;
     
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
@@ -216,25 +219,19 @@ span, p, div { font-family: var(--font-body); }
     flex-direction: column !important;
 }
 
-/* Prevent left column from expanding - constrain height */
+/* Prevent left column from expanding - constrain height and hide scrollbar */
 .gradio-row > .gradio-column:first-child .glass-card {
-    max-height: 85vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    max-height: none;
+    overflow: visible;
 }
 
-/* Custom scrollbar for left column */
-.gradio-row > .gradio-column:first-child .glass-card::-webkit-scrollbar {
-    width: 6px;
+/* Hide all scrollbars in main container */
+.gradio-container {
+    overflow-x: hidden !important;
 }
 
-.gradio-row > .gradio-column:first-child .glass-card::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-}
-
-.gradio-row > .gradio-column:first-child .glass-card::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+body {
+    overflow-x: hidden !important;
 }
 
 .card-header {
@@ -276,17 +273,19 @@ span, p, div { font-family: var(--font-body); }
 /* Primary Button */
 .primary-btn {
     background: var(--primary-gradient) !important;
-    border: none !important;
+    border: 1px solid rgba(33, 150, 243, 0.3) !important;
     color: white !important;
     font-weight: 600 !important;
     padding: 1rem !important;
     border-radius: 10px !important;
-    transition: transform 0.2s;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.25);
+    margin-top: 0 !important;
 }
 .primary-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 0 1px rgba(33, 150, 243, 0.5), 0 8px 25px rgba(33, 150, 243, 0.4);
+    border-color: rgba(33, 150, 243, 0.6) !important;
 }
 
 /* Quick Query Buttons */
@@ -346,20 +345,27 @@ span, p, div { font-family: var(--font-body); }
     color: #60A5FA;
 }
 
-/* Footer Badge */
+/* Calendar/Discovery Badge - Professional Green CTA */
 .calendar-badge {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--accent);
-    padding: 0.6rem 1.2rem;
+    background: linear-gradient(135deg, #00C853 0%, #00A152 100%) !important;
+    color: white;
+    padding: 0.75rem 1.6rem;
     border-radius: 100px;
     font-weight: 600;
     text-decoration: none;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    transition: all 0.2s;
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 200, 83, 0.35);
+    display: inline-block;
 }
 .calendar-badge:hover {
-    background: rgba(16, 185, 129, 0.25);
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    background: linear-gradient(135deg, #00A152 0%, #00853E 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 200, 83, 0.5);
+}
+.calendar-badge span {
+    font-size: 1.1rem;
+    margin-right: 0.3rem;
 }
 
 /* --- MODEL SELECTOR --- */
@@ -393,7 +399,7 @@ span, p, div { font-family: var(--font-body); }
     background: var(--primary-gradient) !important;
     border-color: transparent !important;
     font-weight: 600 !important;
-    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3) !important;
+    box-shadow: 0 3px 12px rgba(33, 150, 243, 0.4) !important;
 }
 
 .model-status {
@@ -408,23 +414,25 @@ span, p, div { font-family: var(--font-body); }
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: rgba(16, 185, 129, 0.08) !important;
-    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 12px;
-    padding: 0.75rem 1rem;
-    margin-top: 0.75rem;
+    padding: 0.5rem 0.8rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0 !important;
     transition: all 0.3s ease;
 }
 
 .security-badge:hover {
-    background: rgba(16, 185, 129, 0.12) !important;
-    border-color: rgba(16, 185, 129, 0.3) !important;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 0 15px rgba(100, 100, 100, 0.2);
 }
 
 .badge-icon {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     line-height: 1;
+    opacity: 0.9;
 }
 
 .badge-content {
@@ -432,16 +440,16 @@ span, p, div { font-family: var(--font-body); }
 }
 
 .badge-title {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 0.2rem;
+    color: var(--text-primary);
+    margin-bottom: 0.15rem;
 }
 
 .badge-subtitle {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
-    opacity: 0.8;
+    opacity: 0.7;
 }
 """
 
@@ -453,8 +461,8 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                 <h1>ENTERPRISE RAG PLATFORM</h1>
                 <p>Secure, Scalable, Agentic Document Intelligence for the Modern Enterprise.</p>
                 <div style="margin-top: 3rem; margin-bottom: 6rem;" id="calendar-button">
-                    <a href="https://cal.com" target="_blank" class="calendar-badge">
-                        <span>📅</span> Book 15m Discovery Call
+                    <a href="https://cal.com/prateekgoel/30m-discovery-call" target="_blank" class="calendar-badge">
+                        <span>📅</span> Book 30m Discovery Call
                     </a>
                 </div>
             </div>
@@ -489,9 +497,9 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
 
                     load_status = gr.Markdown("", elem_classes="status-message")
 
-                    # Visible Divider - Increased Opacity
+                    # Horizontal divider - more visible
                     gr.HTML(
-                        '<div style="margin: 2rem 0; height: 1px; background: rgba(255,255,255,0.5);"></div>'
+                        '<div style="margin: 1rem 0; height: 2px; background: rgba(255,255,255,0.2); border-radius: 1px;"></div>'
                     )
 
                     gr.Markdown("### OR UPLOAD DOCUMENTS", elem_classes="card-header")
@@ -511,9 +519,6 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                             </div>
                         </div>
                     """)
-
-                    # Spacer before Process button
-                    gr.HTML('<div style="height: 1.5rem"></div>')
 
                     process_btn = gr.Button(
                         "Process Documents", elem_classes="primary-btn"
@@ -554,6 +559,9 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         lines=3,
                         elem_classes="gradio-textbox",
                     )
+
+                    # Small spacing before action button
+                    gr.HTML('<div style="height: 0.50rem"></div>')
 
                     with gr.Row():
                         ask_btn = gr.Button(
