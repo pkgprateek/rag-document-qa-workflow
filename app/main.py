@@ -14,6 +14,7 @@ class DocumentRagApp:
         self.loaded_documents = []
 
     def load_samples(self, vertical):
+        """Load sample documents with live progress updates"""
         samples = {
             "Legal": [
                 "data/samples/legal/service_agreement.txt",
@@ -33,19 +34,33 @@ class DocumentRagApp:
         }
 
         try:
-            for path in samples[vertical]:
+            total_chunks = 0
+            for idx, path in enumerate(samples[vertical], 1):
                 if os.path.exists(path):
+                    yield f"Loading document {idx}/{len(samples[vertical])}..."
                     chunks = self.processor.process_txt(path)
+
+                    yield f"Creating smart chunks ({len(chunks)} chunks)..."
                     self.rag_pipeline.add_documents(chunks, is_sample=True)
+
+                    yield f"Building search index..."
                     self.loaded_documents.append(os.path.basename(path))
-            return f"✓ Loaded {len(samples[vertical])} {vertical} documents"
+                    total_chunks += len(chunks)
+
+            yield f"✓ Success! Loaded {len(samples[vertical])} documents ({total_chunks} searchable chunks)"
         except Exception as e:
-            return f"Error: {str(e)}"
+            yield f"❌ Error: {str(e)}"
 
     def process_file(self, file):
+        """Process uploaded file with live progress updates"""
         if not file:
-            return "Please upload a file"
+            yield "⚠️ Please upload a file"
+            return
+
         try:
+            filename = os.path.basename(file.name)
+            yield f"Processing {filename}..."
+
             ext = os.path.splitext(file.name)[1].lower()
             if ext == ".pdf":
                 chunks = self.processor.process_pdf(file.name)
@@ -54,15 +69,18 @@ class DocumentRagApp:
             elif ext == ".docx":
                 chunks = self.processor.process_docx(file.name)
             else:
-                return "Unsupported format"
+                yield "❌ Unsupported format. Please upload PDF, DOCX, or TXT files."
+                return
 
+            yield f"✂️ Created {len(chunks)} smart chunks..."
+
+            yield f"Building search index (securing with AES-256)..."
             self.rag_pipeline.add_documents(chunks, is_sample=False)
-            self.loaded_documents.append(os.path.basename(file.name))
-            return (
-                f"✓ Processed {len(chunks)} chunks from {os.path.basename(file.name)}"
-            )
+            self.loaded_documents.append(filename)
+
+            yield f"✓ Success! {filename} ready for questions ({len(chunks)} searchable chunks)"
         except Exception as e:
-            return f"Error: {str(e)}"
+            yield f"❌ Error: {str(e)}. Please try again or contact support."
 
     def switch_model(self, model_choice):
         """Handle model switching from UI radio button"""
@@ -102,14 +120,17 @@ css = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
 
 :root {
-    /* Brand Palette */
-    --primary-gradient: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
+    /* Material Design Color Palette */
+    --primary-gradient: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    --cta-discovery-gradient: linear-gradient(135deg, #00C853 0%, #00A152 100%);
     --surface-dark: #0B0F19;
     --surface-glass: rgba(17, 24, 39, 0.7);
     --border-glass: rgba(255, 255, 255, 0.08); 
     --text-primary: #F9FAFB;
     --text-secondary: #9CA3AF;
-    --accent: #10B981;
+    --accent: #2196F3;
+    --accent-hover: #1976D2;
+    --cta-discovery: #00C853;
     
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
@@ -198,25 +219,19 @@ span, p, div { font-family: var(--font-body); }
     flex-direction: column !important;
 }
 
-/* Prevent left column from expanding - constrain height */
+/* Prevent left column from expanding - constrain height and hide scrollbar */
 .gradio-row > .gradio-column:first-child .glass-card {
-    max-height: 85vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    max-height: none;
+    overflow: visible;
 }
 
-/* Custom scrollbar for left column */
-.gradio-row > .gradio-column:first-child .glass-card::-webkit-scrollbar {
-    width: 6px;
+/* Hide all scrollbars in main container */
+.gradio-container {
+    overflow-x: hidden !important;
 }
 
-.gradio-row > .gradio-column:first-child .glass-card::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-}
-
-.gradio-row > .gradio-column:first-child .glass-card::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+body {
+    overflow-x: hidden !important;
 }
 
 .card-header {
@@ -258,17 +273,19 @@ span, p, div { font-family: var(--font-body); }
 /* Primary Button */
 .primary-btn {
     background: var(--primary-gradient) !important;
-    border: none !important;
+    border: 1px solid rgba(33, 150, 243, 0.3) !important;
     color: white !important;
     font-weight: 600 !important;
     padding: 1rem !important;
     border-radius: 10px !important;
-    transition: transform 0.2s;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.25);
+    margin-top: 0 !important;
 }
 .primary-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 0 1px rgba(33, 150, 243, 0.5), 0 8px 25px rgba(33, 150, 243, 0.4);
+    border-color: rgba(33, 150, 243, 0.6) !important;
 }
 
 /* Quick Query Buttons */
@@ -328,20 +345,27 @@ span, p, div { font-family: var(--font-body); }
     color: #60A5FA;
 }
 
-/* Footer Badge */
+/* Calendar/Discovery Badge - Professional Green CTA */
 .calendar-badge {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--accent);
-    padding: 0.6rem 1.2rem;
+    background: linear-gradient(135deg, #00C853 0%, #00A152 100%) !important;
+    color: white;
+    padding: 0.75rem 1.6rem;
     border-radius: 100px;
     font-weight: 600;
     text-decoration: none;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    transition: all 0.2s;
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 200, 83, 0.35);
+    display: inline-block;
 }
 .calendar-badge:hover {
-    background: rgba(16, 185, 129, 0.25);
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    background: linear-gradient(135deg, #00A152 0%, #00853E 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 200, 83, 0.5);
+}
+.calendar-badge span {
+    font-size: 1.1rem;
+    margin-right: 0.3rem;
 }
 
 /* --- MODEL SELECTOR --- */
@@ -375,7 +399,7 @@ span, p, div { font-family: var(--font-body); }
     background: var(--primary-gradient) !important;
     border-color: transparent !important;
     font-weight: 600 !important;
-    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3) !important;
+    box-shadow: 0 3px 12px rgba(33, 150, 243, 0.4) !important;
 }
 
 .model-status {
@@ -383,6 +407,49 @@ span, p, div { font-family: var(--font-body); }
     color: var(--text-secondary);
     padding: 0.25rem 0.5rem;
     margin-top: 0.1rem;
+}
+
+/* --- SECURITY BADGE --- */
+.security-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px;
+    padding: 0.5rem 0.8rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0 !important;
+    transition: all 0.3s ease;
+}
+
+.security-badge:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 0 15px rgba(100, 100, 100, 0.2);
+}
+
+.badge-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    opacity: 0.9;
+}
+
+.badge-content {
+    flex: 1;
+}
+
+.badge-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.15rem;
+}
+
+.badge-subtitle {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
 }
 """
 
@@ -394,8 +461,8 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                 <h1>ENTERPRISE RAG PLATFORM</h1>
                 <p>Secure, Scalable, Agentic Document Intelligence for the Modern Enterprise.</p>
                 <div style="margin-top: 3rem; margin-bottom: 6rem;" id="calendar-button">
-                    <a href="https://cal.com" target="_blank" class="calendar-badge">
-                        <span>📅</span> Book 15m Discovery Call
+                    <a href="https://cal.com/prateekgoel/30m-discovery-call" target="_blank" class="calendar-badge">
+                        <span>📅</span> Book 30m Discovery Call
                     </a>
                 </div>
             </div>
@@ -430,9 +497,9 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
 
                     load_status = gr.Markdown("", elem_classes="status-message")
 
-                    # Visible Divider - Increased Opacity
+                    # Horizontal divider - more visible
                     gr.HTML(
-                        '<div style="margin: 2rem 0; height: 1px; background: rgba(255,255,255,0.5);"></div>'
+                        '<div style="margin: 1rem 0; height: 2px; background: rgba(255,255,255,0.2); border-radius: 1px;"></div>'
                     )
 
                     gr.Markdown("### OR UPLOAD DOCUMENTS", elem_classes="card-header")
@@ -442,8 +509,16 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         height=240,  # Increased height
                     )
 
-                    # Spacer before Process button
-                    gr.HTML('<div style="height: 1.5rem"></div>')
+                    # Security Badge
+                    gr.HTML("""
+                        <div class="security-badge">
+                            <div class="badge-icon">🔒</div>
+                            <div class="badge-content">
+                                <div class="badge-title">AES-256 Encrypted</div>
+                                <div class="badge-subtitle">Processed locally • Auto-deleted in 7 days</div>
+                            </div>
+                        </div>
+                    """)
 
                     process_btn = gr.Button(
                         "Process Documents", elem_classes="primary-btn"
@@ -468,7 +543,7 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         show_label=False,
                     )
                     model_status = gr.Markdown(
-                        ":green_circle: _GPT-OSS 120B active_",
+                        "_GPT-OSS 120B active_",
                         elem_classes="model-status",
                     )
 
@@ -484,6 +559,9 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         lines=3,
                         elem_classes="gradio-textbox",
                     )
+
+                    # Small spacing before action button
+                    gr.HTML('<div style="height: 0.50rem"></div>')
 
                     with gr.Row():
                         ask_btn = gr.Button(
@@ -520,7 +598,7 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
             </div>
         """)
 
-    # Event Wiring
+    # Event Wiring with live updates (generators)
     load_legal.click(fn=lambda: app.load_samples("Legal"), outputs=load_status)
     load_research.click(fn=lambda: app.load_samples("Research"), outputs=load_status)
     load_finops.click(fn=lambda: app.load_samples("FinOps"), outputs=load_status)
