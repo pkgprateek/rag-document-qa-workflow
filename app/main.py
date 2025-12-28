@@ -104,47 +104,65 @@ class DocumentRagApp:
         except Exception as e:
             yield f"❌ Error: {str(e)}", loaded_docs
 
-    def process_file(self, file, session_id, current_docs):
-        """Process uploaded file with live progress updates"""
+    def process_file(self, files, session_id, current_docs):
+        """Process uploaded file(s) with live progress updates. Supports single or multiple files."""
         loaded_docs = list(current_docs) if current_docs else []
 
-        if not file:
+        if not files:
             yield "⚠️ Please upload a file", loaded_docs
             return
 
+        # Normalize to list (handles both single file and list of files)
+        file_list = files if isinstance(files, list) else [files]
+        total_files = len(file_list)
+        total_chunks = 0
+        processed_files = []
+
         try:
-            filename = os.path.basename(file.name)
-            yield f"Processing {filename}...", loaded_docs
+            for idx, file in enumerate(file_list, 1):
+                filename = os.path.basename(file.name)
+                yield f"📄 Processing {idx}/{total_files}: {filename}...", loaded_docs
 
-            ext = os.path.splitext(file.name)[1].lower()
-            if ext == ".pdf":
-                chunks = self.processor.process_pdf(file.name)
-            elif ext == ".txt":
-                chunks = self.processor.process_txt(file.name)
-            elif ext == ".docx":
-                chunks = self.processor.process_docx(file.name)
-            else:
-                yield (
-                    "❌ Unsupported format. Please upload PDF, DOCX, or TXT files.",
-                    loaded_docs,
+                ext = os.path.splitext(file.name)[1].lower()
+                if ext == ".pdf":
+                    chunks = self.processor.process_pdf(file.name)
+                elif ext == ".txt":
+                    chunks = self.processor.process_txt(file.name)
+                elif ext == ".docx":
+                    chunks = self.processor.process_docx(file.name)
+                else:
+                    yield (
+                        f"⚠️ Skipped {filename}: Unsupported format (use PDF, DOCX, or TXT)",
+                        loaded_docs,
+                    )
+                    continue
+
+                yield f"✂️ {filename}: Created {len(chunks)} chunks...", loaded_docs
+
+                # Pass session_id for user document isolation
+                self.rag_pipeline.add_documents(
+                    chunks, session_id=session_id, is_sample=False
                 )
-                return
 
-            yield f"✂️ Created {len(chunks)} smart chunks...", loaded_docs
+                if filename not in loaded_docs:
+                    loaded_docs.append(filename)
+                total_chunks += len(chunks)
+                processed_files.append(filename)
 
-            yield "Building secure search index...", loaded_docs
-            # Pass session_id for user document isolation
-            self.rag_pipeline.add_documents(
-                chunks, session_id=session_id, is_sample=False
-            )
-
-            if filename not in loaded_docs:
-                loaded_docs.append(filename)
-
-            yield (
-                f"✓ Success! {filename} ready for questions ({len(chunks)} searchable chunks)",
-                loaded_docs,
-            )
+            # Final success message
+            if processed_files:
+                if len(processed_files) == 1:
+                    yield (
+                        f"✓ Success! {processed_files[0]} ready ({total_chunks} searchable chunks)",
+                        loaded_docs,
+                    )
+                else:
+                    yield (
+                        f"✓ Success! {len(processed_files)} documents processed ({total_chunks} total chunks)",
+                        loaded_docs,
+                    )
+            else:
+                yield "⚠️ No valid documents to process", loaded_docs
         except Exception as e:
             yield (
                 f"❌ Error: {str(e)}. Please try again or contact support.",
@@ -180,6 +198,24 @@ class DocumentRagApp:
             return result["answer"]
         except Exception as e:
             return f"Error: {str(e)}"
+
+    def ask_stream(self, question, session_id, current_docs):
+        """Stream answer with thinking indicator for real-time display."""
+        if not current_docs:
+            yield "Please load documents first"
+            return
+        if not question.strip():
+            yield "Please enter a question"
+            return
+
+        # Thinking indicator
+        yield "🔍 Analyzing documents..."
+
+        try:
+            for answer_text in self.rag_pipeline.query_stream(question, session_id):
+                yield answer_text
+        except Exception as e:
+            yield f"Error: {str(e)}"
 
     def delete_document(self, doc_to_delete, session_id, current_docs):
         """
@@ -696,8 +732,9 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                     gr.Markdown("### OR UPLOAD DOCUMENTS", elem_classes="card-header")
                     file_upload = gr.File(
                         file_types=[".pdf", ".docx", ".txt"],
+                        file_count="multiple",  # Enable multi-file selection
                         show_label=True,
-                        height=240,  # Increased height
+                        height=240,
                     )
 
                     # Security Badge
@@ -755,7 +792,7 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         elem_classes="doc-checkbox-group",
                     )
                     # Spacing before delete button
-                    gr.HTML('<div style="height: 0.10rem;"></div>')
+                    gr.HTML('<div style="height: 0.01rem;"></div>')
                     with gr.Row():
                         remove_docs_btn = gr.Button(
                             "🗑️ Delete Selected Documents",
@@ -888,16 +925,35 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
     )
 
     # File upload
-    def process_file_wrapper(file, session_data, current_docs):
+    def process_file_wrapper(files, session_data, current_docs):
         session_id = get_session_id(session_data)
-        for status, docs in app.process_file(file, session_id, current_docs):
+        # Process files and yield progress
+        final_docs = current_docs
+        for status, docs in app.process_file(files, session_id, current_docs):
             checkbox_update, btn_update = update_doc_ui(docs)
-            yield status, docs, checkbox_update, btn_update
+            final_docs = docs
+            # During processing, keep file visible
+            yield status, docs, checkbox_update, btn_update, gr.update()
+        # After processing, clear the file upload for new uploads
+        checkbox_update, btn_update = update_doc_ui(final_docs)
+        yield (
+            gr.update(value=""),
+            final_docs,
+            checkbox_update,
+            btn_update,
+            gr.update(value=None),
+        )
 
     process_btn.click(
         fn=process_file_wrapper,
         inputs=[file_upload, session_state, docs_state],
-        outputs=[upload_status, docs_state, doc_checkboxes, remove_docs_btn],
+        outputs=[
+            upload_status,
+            docs_state,
+            doc_checkboxes,
+            remove_docs_btn,
+            file_upload,
+        ],
     )
 
     # Document deletion (batch removal via checkboxes)
@@ -933,50 +989,61 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
         fn=app.switch_model, inputs=model_selector, outputs=model_status
     )
 
-    # Question answering - explicit functions for each quick question
-    def ask_termination(session_data, current_docs):
+    # Question answering - streaming handlers for all questions
+    def ask_termination_stream(session_data, current_docs):
         session_id = get_session_id(session_data)
-        return app.ask("What are the termination conditions?", session_id, current_docs)
+        for text in app.ask_stream(
+            "What are the termination conditions?", session_id, current_docs
+        ):
+            yield text
 
-    def ask_payment(session_data, current_docs):
+    def ask_payment_stream(session_data, current_docs):
         session_id = get_session_id(session_data)
-        return app.ask("Summarize payment terms", session_id, current_docs)
+        for text in app.ask_stream("Summarize payment terms", session_id, current_docs):
+            yield text
 
-    def ask_findings(session_data, current_docs):
+    def ask_findings_stream(session_data, current_docs):
         session_id = get_session_id(session_data)
-        return app.ask("Summarize key findings", session_id, current_docs)
+        for text in app.ask_stream("Summarize key findings", session_id, current_docs):
+            yield text
 
-    def ask_risks(session_data, current_docs):
+    def ask_risks_stream(session_data, current_docs):
         session_id = get_session_id(session_data)
-        return app.ask("What are the key risks mentioned?", session_id, current_docs)
+        for text in app.ask_stream(
+            "What are the key risks mentioned?", session_id, current_docs
+        ):
+            yield text
 
-    def ask_custom(question, session_data, current_docs):
+    def ask_custom_stream(question, session_data, current_docs):
         session_id = get_session_id(session_data)
-        return app.ask(question, session_id, current_docs)
+        for text in app.ask_stream(question, session_id, current_docs):
+            yield text
 
     q1.click(
-        fn=ask_termination,
+        fn=ask_termination_stream,
         inputs=[session_state, docs_state],
         outputs=answer,
     )
     q2.click(
-        fn=ask_payment,
+        fn=ask_payment_stream,
         inputs=[session_state, docs_state],
         outputs=answer,
     )
     q3.click(
-        fn=ask_findings,
+        fn=ask_findings_stream,
         inputs=[session_state, docs_state],
         outputs=answer,
     )
     q4.click(
-        fn=ask_risks,
+        fn=ask_risks_stream,
         inputs=[session_state, docs_state],
         outputs=answer,
     )
 
     ask_btn.click(
-        fn=ask_custom, inputs=[question, session_state, docs_state], outputs=answer
+        fn=ask_custom_stream,
+        inputs=[question, session_state, docs_state],
+        outputs=answer,
     )
 
 if __name__ == "__main__":

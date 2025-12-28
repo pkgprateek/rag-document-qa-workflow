@@ -12,45 +12,52 @@ short_description: Document intelligence for Legal, Research, FinOps
 full_width: true
 ---
 
-# 🚀 Enterprise RAG Platform
+# Enterprise RAG Platform
 
-**Question your documents. Get cited answers in seconds.**
+**Turn documents into answers. Instantly.**
 
-Upload contracts, research papers, or financial reports → Ask questions in plain English → Get precise answers with page citations.
+Upload contracts, research papers, or financial reports → Ask questions → Get cited answers in seconds.
+
+---
+
+## ✨ What's New
+
+- **Multi-document upload** — Process multiple files at once
+- **Streaming answers** — Watch responses generate in real-time
+- **Thinking indicator** — See "🔍 Analyzing documents..." before streaming starts
 
 ---
 
 ## How It Works
 
-```mermaid
-graph LR
-    A["📄 Upload"] --> B["✂️ Chunk"]
-    B --> C["🧠 Embed"]
-    C --> D["💬 Ask"]
-    D --> E["✨ Cited Answer"]
+```
+📄 Upload → ✂️ Chunk → 🧠 Embed → 💬 Ask → ✨ Cited Answer
 ```
 
-**3 steps**: Upload → Ask → Get answers with citations.
+**3 steps**: Upload your documents → Ask questions → Get answers with page citations.
 
 ---
 
 ## Try It Now
 
-1. **Select a vertical** (Legal, Research, or FinOps) — pre-loaded samples ready
-2. **Ask a sample question** or type your own
-3. **See the magic** — cited answers in seconds
+1. **Select a vertical** — Legal, Research, or FinOps samples pre-loaded
+2. **Or upload your own** — PDF, DOCX, TXT supported (batch upload enabled)
+3. **Ask anything** — Natural language questions
+4. **Get streaming answers** — Watch the AI think and respond in real-time
 
-No signup required. Your documents are processed locally and auto-deleted after 7 days.
+No signup required. Documents auto-deleted after 7 days.
 
 ---
 
 ## Features
 
-- **Multi-format**: PDF, DOCX, TXT
-- **Citations**: Every answer references source documents  
-- **Domain demos**: Legal, Research, FinOps pre-loaded
-- **Privacy-first**: Local processing, auto-delete after 7 days
-- **Fast**: 1-3 second response time
+| Feature | Description |
+|---------|-------------|
+| **Multi-upload** | Upload multiple files at once |
+| **Streaming** | Real-time token-by-token answers |
+| **Citations** | Every answer links to source + page |
+| **3 AI models** | GPT-OSS 120B, Llama 3.3, Gemma 3 |
+| **Privacy** | Session isolation, 7-day auto-delete |
 
 ---
 
@@ -60,30 +67,28 @@ No signup required. Your documents are processed locally and auto-deleted after 
 git clone https://github.com/pkgprateek/rag-document-qa-workflow.git
 cd rag-document-qa-workflow
 echo "GROQ_API_KEY=your_key" > .env
-echo "OPENROUTER_API_KEY=your_key" >> .env
 docker compose up
 # → http://localhost:7860
 ```
 
-**Get Free API Keys:** [Groq](https://console.groq.com/keys) (Required) · [OpenRouter](https://openrouter.ai/keys) (Optional)  
-[View source on GitHub](https://github.com/pkgprateek/rag-document-qa-workflow)
+**API Keys:** [Groq](https://console.groq.com/keys) (Required) · [OpenRouter](https://openrouter.ai/keys) (Optional)
 
 ---
 
 ## 🔒 Privacy
 
-- Documents processed locally (never sent externally)
-- Stored in encrypted ChromaDB
+- Documents processed locally
+- Session-isolated storage
 - Auto-deleted after 7 days
-- Never used for model training
+- Never used for training
 
 ---
 
 ## Enterprise Pilots
 
-**2-week paid pilots** for teams ready to deploy RAG on their documents.
+**2-week paid pilots** for teams ready to deploy RAG on their infrastructure.
 
-📅 [Book discovery call](https://cal.com/your-link)
+📅 [Book discovery call](https://cal.com/prateekgoel/30m-discovery-call)
 
 ---
 
