@@ -388,6 +388,106 @@ Answer:""",
 
         return {"answer": answer_text}
 
+    def query_stream(self, question: str, session_id: str = None):
+        """
+        Stream answer tokens for real-time display.
+        Yields tokens as they arrive from the LLM.
+
+        Args:
+            question: User's question string
+            session_id: User's session ID for filtering results
+
+        Yields:
+            str: Accumulated answer text (each yield contains full answer so far)
+        """
+        # Check rate limit
+        if not self._check_rate_limit():
+            yield "⚠️ Rate limit exceeded. You can only ask 10 questions per hour. Please try again later."
+            return
+
+        # Set session ID for filtered retrieval
+        self._current_session_id = session_id
+
+        # Get documents using retriever (non-streaming part)
+        retriever = self.vector_store.as_retriever(search_kwargs={"k": 4})
+        docs = retriever.invoke(question)
+
+        # Filter by session
+        if session_id:
+            docs = [
+                d
+                for d in docs
+                if d.metadata.get("session_id") == session_id
+                or d.metadata.get("is_sample", False)
+            ]
+
+        if not docs:
+            yield "I couldn't find relevant information in your documents. Please try rephrasing your question."
+            return
+
+        # Build context and sources
+        context = "\n\n".join([d.page_content for d in docs])
+        sources = ", ".join(
+            list(set([d.metadata.get("source", "").split("/")[-1] for d in docs]))
+        )
+
+        # Format prompt
+        prompt = self._format_prompt(context, sources, question)
+
+        # Stream from LLM
+        full_answer = ""
+        for chunk in self.llm.stream(prompt):
+            if hasattr(chunk, "content"):
+                full_answer += chunk.content
+            else:
+                full_answer += str(chunk)
+            yield full_answer
+
+    def _format_prompt(self, context: str, sources: str, question: str) -> str:
+        """
+        Format the RAG prompt with context, sources, and question.
+
+        Args:
+            context: Retrieved document content
+            sources: Comma-separated source filenames
+            question: User's question
+
+        Returns:
+            str: Formatted prompt string
+        """
+        return f"""You are an expert AI assistant specializing in document analysis. Your goal is to provide comprehensive, accurate, and well-cited answers.
+
+Available Documents: {sources}
+
+Context from Documents:
+{context}
+
+User Question: {question}
+
+INSTRUCTIONS FOR YOUR RESPONSE:
+1. **Analyze Thoroughly**: Read the context carefully and identify all relevant information
+2. **Answer Comprehensively**: Provide a complete, detailed answer that fully addresses the question
+3. **Use Proper Structure**: 
+   - Start with a clear, direct answer
+   - Follow with supporting details and explanation
+   - Use markdown formatting (headings, bullet points, bold) for readability
+4. **Cite Sources Inline**: As you make specific claims, cite the source immediately
+   - Format: (Source: filename, Page X) or (Source: filename) if page unknown
+   - Example: "The termination period is 30 days (Source: service_agreement.pdf, Page 3)"
+   - Be specific about which document and page number whenever possible
+5. **Include a Sources Section**: At the end of your answer, add:
+   **Sources Referenced:**
+   • filename (Page X) - Brief note about what info came from here
+   • filename2 (Page Y) - Brief note
+   
+6. **Quality Standards**:
+   - Be specific and precise with facts, numbers, dates, and terms
+   - Quote exact phrases when important (use quotation marks)
+   - If information is unclear or missing, state what's uncertain
+   - Connect related points to create a cohesive narrative
+
+Answer:"""
+
     def _extract_citations(self, source_documents: List[Document]) -> List[dict]:
         """
         Extract formatted citations from source documents with page numbers and previews.
