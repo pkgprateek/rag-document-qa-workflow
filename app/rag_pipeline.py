@@ -3,7 +3,11 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.documents import Document
-from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from langchain_core.runnables import (
+    RunnableParallel,
+    RunnablePassthrough,
+    RunnableLambda,
+)
 from typing import List
 import os
 from datetime import datetime, timedelta
@@ -80,6 +84,9 @@ class RAGPipeline:
         # Initialize LLM with default model
         self.current_model = default_model
         self.llm = self._initialize_llm(default_model)
+
+        # Current session ID for retrieval filtering (set per-query)
+        self._current_session_id = None
 
         # Create RAG chain
         self.rag_chain = self.create_rag_chain()
@@ -213,13 +220,30 @@ Answer:""",
             search_kwargs={"k": 4}  # Retrieve top 4 most relevant chunks
         )
 
+        # Wrap retriever to filter by session
+        def session_filter(docs):
+            """Filter documents by current session."""
+            session_id = self._current_session_id
+            if session_id:
+                # Return docs matching session_id OR sample docs (is_sample=True)
+                return [
+                    d
+                    for d in docs
+                    if d.metadata.get("session_id") == session_id
+                    or d.metadata.get("is_sample", False)
+                ]
+            return docs
+
+        # Create session-filtered retriever as a Runnable
+        session_filtered_retriever = retriever | RunnableLambda(session_filter)
+
         rag_chain = RunnableParallel(
             {
                 "result": (
                     {
-                        "context": retriever
+                        "context": session_filtered_retriever
                         | (lambda docs: "\n\n".join([d.page_content for d in docs])),
-                        "sources": retriever
+                        "sources": session_filtered_retriever
                         | (
                             lambda docs: ", ".join(
                                 list(
@@ -237,27 +261,42 @@ Answer:""",
                     | prompt
                     | self.llm
                 ),
-                "source_documents": retriever,
+                "source_documents": session_filtered_retriever,
             }
         )
         return rag_chain
 
-    def add_documents(self, documents: List[Document], is_sample: bool = False) -> None:
+    def add_documents(
+        self,
+        documents: List[Document],
+        session_id: str = None,
+        is_sample: bool = False,
+    ) -> None:
         """
         Add processed document chunks to the vector store for retrieval.
-        Tracks upload timestamp for auto-cleanup (user docs only).
+        Adds session_id and timestamp metadata for isolation and auto-cleanup.
 
         Args:
             documents: List of Document objects with text and metadata
-            is_sample: If True, document won't be auto-deleted (for demo samples)
+            session_id: User's session ID for isolation (None for samples)
+            is_sample: If True, document is global and won't be auto-deleted
         """
+        # Add session and timestamp metadata to each chunk
+        now = datetime.now().isoformat()
+
+        for doc in documents:
+            doc.metadata["session_id"] = session_id if not is_sample else "global"
+            doc.metadata["uploaded_at"] = now
+            doc.metadata["is_sample"] = is_sample
+
         self.vector_store.add_documents(documents)
-        # In newer versions of langchain-chroma, persist() is no longer needed
-        # as documents are automatically persisted when added
 
         # Track document metadata for cleanup (skip samples)
         if not is_sample and documents:
-            self._track_document(documents[0].metadata.get("source", "unknown"))
+            self._track_document(
+                documents[0].metadata.get("source", "unknown"),
+                session_id=session_id,
+            )
 
     def _check_rate_limit(self) -> bool:
         """
@@ -303,12 +342,14 @@ Answer:""",
 
         return True
 
-    def query(self, question: str):
+    def query(self, question: str, session_id: str = None):
         """
         Query the RAG system with a question, retrieves relevant context and generates answer.
+        Results are filtered to the user's session documents + global samples.
 
         Args:
             question: User's question string
+            session_id: User's session ID for filtering results
 
         Returns:
             dict: {
@@ -326,6 +367,9 @@ Answer:""",
                 "Rate limit exceeded. You can only ask 10 questions per hour. "
                 "Please try again later."
             )
+
+        # Set session ID for filtered retrieval
+        self._current_session_id = session_id
 
         answer = self.rag_chain.invoke(question)
         result = answer["result"]
@@ -396,12 +440,13 @@ Answer:""",
 
         return citations
 
-    def _track_document(self, source_path: str) -> None:
+    def _track_document(self, source_path: str, session_id: str = None) -> None:
         """
         Track document upload timestamp for auto-cleanup.
 
         Args:
             source_path: Path to the uploaded document
+            session_id: User's session ID for the document
         """
         # Load existing metadata
         if self.doc_metadata_file.exists():
@@ -410,9 +455,10 @@ Answer:""",
         else:
             metadata = {"documents": {}}
 
-        # Add new document with current timestamp
+        # Add new document with current timestamp and session
         metadata["documents"][source_path] = {
             "uploaded_at": datetime.now().isoformat(),
+            "session_id": session_id,
             "is_sample": False,
         }
 
@@ -434,6 +480,7 @@ Answer:""",
         now = datetime.now()
         seven_days_ago = now - timedelta(days=7)
         documents_to_keep = {}
+        deleted_count = 0
 
         for doc_path, doc_info in metadata.get("documents", {}).items():
             upload_time = datetime.fromisoformat(doc_info["uploaded_at"])
@@ -442,12 +489,87 @@ Answer:""",
             if upload_time > seven_days_ago or doc_info.get("is_sample", False):
                 documents_to_keep[doc_path] = doc_info
             else:
-                # Delete from vector store
-                # Note: ChromaDB doesn't support direct deletion by metadata filter
-                # In production, you'd implement this with collection.delete()
-                print(f"Would delete old document: {doc_path}")
+                # Actually delete from ChromaDB using source path filter
+                try:
+                    self.vector_store._collection.delete(where={"source": doc_path})
+                    deleted_count += 1
+                    print(f"Deleted expired document: {doc_path}")
+                except Exception as e:
+                    print(f"Error deleting document {doc_path}: {e}")
 
         # Update metadata file
         metadata["documents"] = documents_to_keep
         with open(self.doc_metadata_file, "w") as f:
             json.dump(metadata, f, indent=2)
+
+        if deleted_count > 0:
+            print(f"Cleanup complete: removed {deleted_count} expired documents")
+
+    def get_documents_by_session(self, session_id: str) -> List[str]:
+        """
+        Get list of document names for a given session.
+
+        Args:
+            session_id: User's session ID
+
+        Returns:
+            List[str]: List of document filenames belonging to this session
+        """
+        if not self.doc_metadata_file.exists():
+            return []
+
+        with open(self.doc_metadata_file, "r") as f:
+            metadata = json.load(f)
+
+        documents = []
+        for doc_path, doc_info in metadata.get("documents", {}).items():
+            if doc_info.get("session_id") == session_id:
+                # Extract just the filename
+                filename = doc_path.split("/")[-1] if "/" in doc_path else doc_path
+                documents.append(
+                    {
+                        "filename": filename,
+                        "path": doc_path,
+                        "uploaded_at": doc_info["uploaded_at"],
+                    }
+                )
+
+        return documents
+
+    def delete_document(self, session_id: str, source_path: str) -> bool:
+        """
+        Delete a specific document from vector store and metadata.
+
+        Args:
+            session_id: User's session ID (for verification)
+            source_path: Full path to the document to delete
+
+        Returns:
+            bool: True if deleted, False if not found or not authorized
+        """
+        if not self.doc_metadata_file.exists():
+            return False
+
+        with open(self.doc_metadata_file, "r") as f:
+            metadata = json.load(f)
+
+        # Verify document belongs to this session
+        doc_info = metadata.get("documents", {}).get(source_path)
+        if not doc_info:
+            return False
+        if doc_info.get("session_id") != session_id:
+            return False  # Not authorized to delete
+
+        # Delete from ChromaDB
+        try:
+            self.vector_store._collection.delete(where={"source": source_path})
+        except Exception as e:
+            print(f"Error deleting from ChromaDB: {e}")
+            return False
+
+        # Remove from metadata
+        del metadata["documents"][source_path]
+        with open(self.doc_metadata_file, "w") as f:
+            json.dump(metadata, f, indent=2)
+
+        return True
