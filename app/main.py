@@ -2,6 +2,7 @@ import gradio as gr
 from rag_pipeline import RAGPipeline
 from document_processor import DocumentProcessor
 import os
+import uuid
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,9 +12,47 @@ class DocumentRagApp:
     def __init__(self):
         self.processor = DocumentProcessor()
         self.rag_pipeline = RAGPipeline()
-        self.loaded_documents = []
 
-    def load_samples(self, vertical):
+    def initialize_session(self, session_data):
+        """
+        Initialize or restore a user session.
+        Session expires after 7 days (consistent with file deletion).
+
+        Args:
+            session_data: Dict with 'id' and 'created_at' or None for new session
+
+        Returns:
+            session_data (dict), loaded documents list, and status message
+        """
+        from datetime import datetime, timedelta
+
+        now = datetime.now()
+
+        if session_data is None:
+            # New user - generate session with timestamp
+            session_data = {"id": str(uuid.uuid4()), "created_at": now.isoformat()}
+            return session_data, [], ""
+
+        # Check if session has expired (older than 7 days)
+        try:
+            created_at = datetime.fromisoformat(session_data.get("created_at", ""))
+            if now - created_at > timedelta(days=7):
+                # Session expired - create new session
+                session_data = {"id": str(uuid.uuid4()), "created_at": now.isoformat()}
+                return session_data, [], "Session expired. Started fresh session."
+        except (ValueError, TypeError):
+            # Invalid timestamp - create new session
+            session_data = {"id": str(uuid.uuid4()), "created_at": now.isoformat()}
+            return session_data, [], ""
+
+        # Valid session - load existing documents
+        session_id = session_data.get("id")
+        existing_docs = self.rag_pipeline.get_documents_by_session(session_id)
+        doc_names = [doc["filename"] for doc in existing_docs]
+        status = f"✓ Restored {len(existing_docs)} documents" if existing_docs else ""
+        return session_data, doc_names, status
+
+    def load_samples(self, vertical, session_id, current_docs):
         """Load sample documents with live progress updates"""
         samples = {
             "Legal": [
@@ -33,33 +72,49 @@ class DocumentRagApp:
             ],
         }
 
+        loaded_docs = list(current_docs) if current_docs else []
         try:
             total_chunks = 0
             for idx, path in enumerate(samples[vertical], 1):
                 if os.path.exists(path):
-                    yield f"Loading document {idx}/{len(samples[vertical])}..."
+                    yield (
+                        f"Loading document {idx}/{len(samples[vertical])}...",
+                        loaded_docs,
+                    )
                     chunks = self.processor.process_txt(path)
 
-                    yield f"Creating smart chunks ({len(chunks)} chunks)..."
-                    self.rag_pipeline.add_documents(chunks, is_sample=True)
+                    yield (
+                        f"Creating smart chunks ({len(chunks)} chunks)...",
+                        loaded_docs,
+                    )
+                    # Samples are global (is_sample=True), no session filtering
+                    self.rag_pipeline.add_documents(
+                        chunks, session_id=None, is_sample=True
+                    )
 
-                    yield f"Building search index..."
-                    self.loaded_documents.append(os.path.basename(path))
+                    doc_name = os.path.basename(path)
+                    if doc_name not in loaded_docs:
+                        loaded_docs.append(doc_name)
                     total_chunks += len(chunks)
 
-            yield f"✓ Success! Loaded {len(samples[vertical])} documents ({total_chunks} searchable chunks)"
+            yield (
+                f"✓ Success! Loaded {len(samples[vertical])} documents ({total_chunks} searchable chunks)",
+                loaded_docs,
+            )
         except Exception as e:
-            yield f"❌ Error: {str(e)}"
+            yield f"❌ Error: {str(e)}", loaded_docs
 
-    def process_file(self, file):
+    def process_file(self, file, session_id, current_docs):
         """Process uploaded file with live progress updates"""
+        loaded_docs = list(current_docs) if current_docs else []
+
         if not file:
-            yield "⚠️ Please upload a file"
+            yield "⚠️ Please upload a file", loaded_docs
             return
 
         try:
             filename = os.path.basename(file.name)
-            yield f"Processing {filename}..."
+            yield f"Processing {filename}...", loaded_docs
 
             ext = os.path.splitext(file.name)[1].lower()
             if ext == ".pdf":
@@ -69,22 +124,35 @@ class DocumentRagApp:
             elif ext == ".docx":
                 chunks = self.processor.process_docx(file.name)
             else:
-                yield "❌ Unsupported format. Please upload PDF, DOCX, or TXT files."
+                yield (
+                    "❌ Unsupported format. Please upload PDF, DOCX, or TXT files.",
+                    loaded_docs,
+                )
                 return
 
-            yield f"✂️ Created {len(chunks)} smart chunks..."
+            yield f"✂️ Created {len(chunks)} smart chunks...", loaded_docs
 
-            yield f"Building search index (securing with AES-256)..."
-            self.rag_pipeline.add_documents(chunks, is_sample=False)
-            self.loaded_documents.append(filename)
+            yield "Building secure search index...", loaded_docs
+            # Pass session_id for user document isolation
+            self.rag_pipeline.add_documents(
+                chunks, session_id=session_id, is_sample=False
+            )
 
-            yield f"✓ Success! {filename} ready for questions ({len(chunks)} searchable chunks)"
+            if filename not in loaded_docs:
+                loaded_docs.append(filename)
+
+            yield (
+                f"✓ Success! {filename} ready for questions ({len(chunks)} searchable chunks)",
+                loaded_docs,
+            )
         except Exception as e:
-            yield f"❌ Error: {str(e)}. Please try again or contact support."
+            yield (
+                f"❌ Error: {str(e)}. Please try again or contact support.",
+                loaded_docs,
+            )
 
     def switch_model(self, model_choice):
         """Handle model switching from UI radio button"""
-        # Map UI choices to model keys
         model_map = {
             "GPT-OSS 120B (OpenAI) - Default": "gpt-oss-120b",
             "Llama 3.3 70B (Meta)": "llama-3.3-70b",
@@ -93,7 +161,7 @@ class DocumentRagApp:
 
         model_key = model_map.get(model_choice)
         if not model_key:
-            return f"❌ Invalid model selection"
+            return "❌ Invalid model selection"
 
         try:
             display_name = self.rag_pipeline.switch_model(model_key)
@@ -101,16 +169,69 @@ class DocumentRagApp:
         except Exception as e:
             return f"❌ Error switching model: {str(e)}"
 
-    def ask(self, question):
-        if not self.loaded_documents:
+    def ask(self, question, session_id, current_docs):
+        """Answer a question using documents from this session"""
+        if not current_docs:
             return "Please load documents first"
         if not question.strip():
             return "Please enter a question"
         try:
-            result = self.rag_pipeline.query(question)
+            result = self.rag_pipeline.query(question, session_id=session_id)
             return result["answer"]
         except Exception as e:
             return f"Error: {str(e)}"
+
+    def delete_document(self, doc_to_delete, session_id, current_docs):
+        """
+        Delete a document from the session.
+        - Sample docs: only removed from session (not from storage)
+        - User docs: removed from session AND storage/ChromaDB
+        """
+        if not doc_to_delete:
+            return current_docs, "No document selected"
+
+        # Check if it's a sample document
+        sample_names = [
+            "service_agreement.txt",
+            "amendment.txt",
+            "nda.txt",
+            "llm_enterprise_survey.txt",
+            "rag_methodology.txt",
+            "vector_db_benchmark.txt",
+            "cloud_cost_optimization.txt",
+            "aws_invoice_sept2024.txt",
+            "kubernetes_cost_allocation.txt",
+        ]
+
+        is_sample = doc_to_delete in sample_names
+
+        if is_sample:
+            # Sample doc: just remove from this session's list (not from storage)
+            print(f"[DEBUG] Removing SAMPLE doc from session only: {doc_to_delete}")
+            updated_docs = [d for d in current_docs if d != doc_to_delete]
+            return updated_docs, f"✓ Removed {doc_to_delete}"
+        else:
+            # User doc: remove from session AND delete from ChromaDB
+            print(
+                f"[DEBUG] Deleting USER doc from session AND storage: {doc_to_delete}"
+            )
+            user_docs = self.rag_pipeline.get_documents_by_session(session_id)
+            for doc in user_docs:
+                if doc["filename"] == doc_to_delete:
+                    print(f"[DEBUG] Found in storage, deleting: {doc['path']}")
+                    success = self.rag_pipeline.delete_document(session_id, doc["path"])
+                    if success:
+                        print(f"[DEBUG] Successfully deleted from ChromaDB")
+                        updated_docs = [d for d in current_docs if d != doc_to_delete]
+                        return updated_docs, f"✓ Deleted {doc_to_delete}"
+                    else:
+                        print(f"[DEBUG] Failed to delete from ChromaDB")
+                        return current_docs, f"❌ Failed to delete {doc_to_delete}"
+
+            # Document not found in storage, just remove from list
+            print(f"[DEBUG] Doc not in storage, just removing from session list")
+            updated_docs = [d for d in current_docs if d != doc_to_delete]
+            return updated_docs, f"✓ Removed {doc_to_delete}"
 
 
 app = DocumentRagApp()
@@ -451,9 +572,79 @@ body {
     color: var(--text-secondary);
     opacity: 0.7;
 }
+
+/* --- DOCUMENT CHECKBOX GROUP --- */
+.doc-checkbox-group {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.doc-checkbox-group .wrap {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.6rem !important;
+}
+
+.doc-checkbox-group label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 100px !important;
+    padding: 0.4rem 0.9rem 0.4rem 0.6rem !important;
+    font-size: 0.8rem !important;
+    color: var(--text-secondary) !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.doc-checkbox-group label:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.doc-checkbox-group label.selected {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    color: #fca5a5 !important;
+}
+
+/* Show checkbox with custom styling */
+.doc-checkbox-group input[type="checkbox"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 14px !important;
+    height: 14px !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 3px !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.doc-checkbox-group input[type="checkbox"]:checked {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+}
+
+.doc-checkbox-group input[type="checkbox"]:checked::after {
+    content: '✓' !important;
+    display: block !important;
+    text-align: center !important;
+    font-size: 10px !important;
+    line-height: 12px !important;
+    color: white !important;
+    font-weight: bold !important;
+}
 """
 
 with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
+    # Session and document state (persisted in browser localStorage)
+    session_state = gr.BrowserState(default_value=None, storage_key="rag_session_id")
+    docs_state = gr.State(value=[])  # List of loaded document names
+
     with gr.Column(elem_id="main-container"):
         # --- HERO ---
         gr.HTML("""
@@ -514,8 +705,8 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         <div class="security-badge">
                             <div class="badge-icon">🔒</div>
                             <div class="badge-content">
-                                <div class="badge-title">AES-256 Encrypted</div>
-                                <div class="badge-subtitle">Processed locally • Auto-deleted in 7 days</div>
+                                <div class="badge-title">Secure Transfer</div>
+                                <div class="badge-subtitle">Files encrypted in transit • Auto-deleted in 7 days</div>
                             </div>
                         </div>
                     """)
@@ -546,6 +737,33 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
                         "_GPT-OSS 120B active_",
                         elem_classes="model-status",
                     )
+
+                    # Divider before document list
+                    gr.HTML(
+                        '<div style="margin: 1rem 0; height: 1px; background: rgba(255,255,255,0.15);"></div>'
+                    )
+
+                    # Active Documents Section - using CheckboxGroup for reliable selection
+                    gr.Markdown(
+                        "**📄 Active Documents**", elem_classes="card-subheader"
+                    )
+                    doc_checkboxes = gr.CheckboxGroup(
+                        choices=[],
+                        value=[],
+                        label="",
+                        show_label=False,
+                        elem_classes="doc-checkbox-group",
+                    )
+                    # Spacing before delete button
+                    gr.HTML('<div style="height: 0.10rem;"></div>')
+                    with gr.Row():
+                        remove_docs_btn = gr.Button(
+                            "🗑️ Delete Selected Documents",
+                            size="sm",
+                            elem_classes="query-btn",
+                            visible=False,
+                        )
+                    delete_status = gr.Markdown("", elem_classes="status-message")
 
             # --- RIGHT: INTERACTION CARD (55%) ---
             with gr.Column(scale=11):
@@ -593,41 +811,173 @@ with gr.Blocks(css=css, theme=gr.themes.Base(), title="Enterprise RAG") as demo:
     with gr.Row(elem_id="footer-info"):
         gr.HTML("""
             <div style="text-align: center; color: var(--text-secondary); margin-top: 3rem; padding-bottom: 2rem; font-size: 0.9rem;">
-                <p>🔒 <strong>Secure Environment</strong>: Documents processed locally & auto-deleted after 7 days.</p>
+                <p>🔒 <strong>Secure Environment</strong>: Documents stored securely & auto-deleted after 7 days.</p>
                 <p style="margin-top: 0.5rem; opacity: 0.6;">© 2024 Enterprise RAG Platform. Licensed under MIT.</p>
             </div>
         """)
 
-    # Event Wiring with live updates (generators)
-    load_legal.click(fn=lambda: app.load_samples("Legal"), outputs=load_status)
-    load_research.click(fn=lambda: app.load_samples("Research"), outputs=load_status)
-    load_finops.click(fn=lambda: app.load_samples("FinOps"), outputs=load_status)
+    # --- HELPER FUNCTIONS ---
 
-    process_btn.click(fn=app.process_file, inputs=file_upload, outputs=upload_status)
+    def update_doc_ui(docs):
+        """Update document checkboxes and remove button visibility"""
+        choices = docs if docs else []
+        show_btn = len(docs) > 0
+        return gr.update(choices=choices, value=[]), gr.update(visible=show_btn)
+
+    # Helper to extract session ID from session_data dict
+    def get_session_id(session_data):
+        """Extract session ID string from session data dict"""
+        if isinstance(session_data, dict):
+            return session_data.get("id")
+        return session_data  # Backwards compatibility
+
+    # --- SESSION INITIALIZATION ---
+    def on_load(session_data):
+        """Initialize session on page load"""
+        new_session_data, docs, status = app.initialize_session(session_data)
+        checkbox_update, btn_update = update_doc_ui(docs)
+        return new_session_data, docs, checkbox_update, btn_update, status
+
+    demo.load(
+        fn=on_load,
+        inputs=[session_state],
+        outputs=[
+            session_state,
+            docs_state,
+            doc_checkboxes,
+            remove_docs_btn,
+            load_status,
+        ],
+    )
+
+    # --- EVENT WIRING ---
+
+    # Sample loading - create specific wrapper functions for each vertical
+    def load_legal_samples(session_data, current_docs):
+        session_id = get_session_id(session_data)
+        for status, docs in app.load_samples("Legal", session_id, current_docs):
+            checkbox_update, btn_update = update_doc_ui(docs)
+            yield status, docs, checkbox_update, btn_update
+
+    def load_research_samples(session_data, current_docs):
+        session_id = get_session_id(session_data)
+        for status, docs in app.load_samples("Research", session_id, current_docs):
+            checkbox_update, btn_update = update_doc_ui(docs)
+            yield status, docs, checkbox_update, btn_update
+
+    def load_finops_samples(session_data, current_docs):
+        session_id = get_session_id(session_data)
+        for status, docs in app.load_samples("FinOps", session_id, current_docs):
+            checkbox_update, btn_update = update_doc_ui(docs)
+            yield status, docs, checkbox_update, btn_update
+
+    load_legal.click(
+        fn=load_legal_samples,
+        inputs=[session_state, docs_state],
+        outputs=[load_status, docs_state, doc_checkboxes, remove_docs_btn],
+    )
+    load_research.click(
+        fn=load_research_samples,
+        inputs=[session_state, docs_state],
+        outputs=[load_status, docs_state, doc_checkboxes, remove_docs_btn],
+    )
+    load_finops.click(
+        fn=load_finops_samples,
+        inputs=[session_state, docs_state],
+        outputs=[load_status, docs_state, doc_checkboxes, remove_docs_btn],
+    )
+
+    # File upload
+    def process_file_wrapper(file, session_data, current_docs):
+        session_id = get_session_id(session_data)
+        for status, docs in app.process_file(file, session_id, current_docs):
+            checkbox_update, btn_update = update_doc_ui(docs)
+            yield status, docs, checkbox_update, btn_update
+
+    process_btn.click(
+        fn=process_file_wrapper,
+        inputs=[file_upload, session_state, docs_state],
+        outputs=[upload_status, docs_state, doc_checkboxes, remove_docs_btn],
+    )
+
+    # Document deletion (batch removal via checkboxes)
+    def remove_selected_docs(selected_docs, session_data, current_docs):
+        """Remove all selected documents"""
+        session_id = get_session_id(session_data)
+        if not selected_docs:
+            checkbox_update, btn_update = update_doc_ui(current_docs)
+            return current_docs, "No documents selected", checkbox_update, btn_update
+
+        messages = []
+        updated_docs = list(current_docs)
+        for doc_name in selected_docs:
+            updated_docs, msg = app.delete_document(doc_name, session_id, updated_docs)
+            messages.append(msg)
+
+        checkbox_update, btn_update = update_doc_ui(updated_docs)
+        status_msg = (
+            " / ".join(messages)
+            if len(messages) <= 2
+            else f"Removed {len(selected_docs)} documents"
+        )
+        return updated_docs, status_msg, checkbox_update, btn_update
+
+    remove_docs_btn.click(
+        fn=remove_selected_docs,
+        inputs=[doc_checkboxes, session_state, docs_state],
+        outputs=[docs_state, delete_status, doc_checkboxes, remove_docs_btn],
+    )
 
     # Model switching
     model_selector.change(
         fn=app.switch_model, inputs=model_selector, outputs=model_status
     )
 
+    # Question answering - explicit functions for each quick question
+    def ask_termination(session_data, current_docs):
+        session_id = get_session_id(session_data)
+        return app.ask("What are the termination conditions?", session_id, current_docs)
+
+    def ask_payment(session_data, current_docs):
+        session_id = get_session_id(session_data)
+        return app.ask("Summarize payment terms", session_id, current_docs)
+
+    def ask_findings(session_data, current_docs):
+        session_id = get_session_id(session_data)
+        return app.ask("Summarize key findings", session_id, current_docs)
+
+    def ask_risks(session_data, current_docs):
+        session_id = get_session_id(session_data)
+        return app.ask("What are the key risks mentioned?", session_id, current_docs)
+
+    def ask_custom(question, session_data, current_docs):
+        session_id = get_session_id(session_data)
+        return app.ask(question, session_id, current_docs)
+
     q1.click(
-        fn=lambda: app.ask("What are the termination conditions?"),
+        fn=ask_termination,
+        inputs=[session_state, docs_state],
         outputs=answer,
     )
     q2.click(
-        fn=lambda: app.ask("Summarize payment terms"),
+        fn=ask_payment,
+        inputs=[session_state, docs_state],
         outputs=answer,
     )
     q3.click(
-        fn=lambda: app.ask("Summarize key findings"),
+        fn=ask_findings,
+        inputs=[session_state, docs_state],
         outputs=answer,
     )
     q4.click(
-        fn=lambda: app.ask("What are the key risks mentioned?"),
+        fn=ask_risks,
+        inputs=[session_state, docs_state],
         outputs=answer,
     )
 
-    ask_btn.click(fn=app.ask, inputs=question, outputs=answer)
+    ask_btn.click(
+        fn=ask_custom, inputs=[question, session_state, docs_state], outputs=answer
+    )
 
 if __name__ == "__main__":
     demo.launch(share=False)
